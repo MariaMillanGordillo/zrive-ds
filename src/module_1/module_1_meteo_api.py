@@ -15,8 +15,24 @@ VARIABLES = ["temperature_2m_mean", "precipitation_sum", "wind_speed_10m_max"]
 START_DATE = "2010-01-01"
 END_DATE = "2020-12-31"
 
+## API functions
 
-def get_data_meteo_api(city, start_date=START_DATE, end_date=END_DATE):
+def call_api(city, url=API_URL):
+    params = {
+        "latitude": COORDINATES[city]["latitude"],
+        "longitude": COORDINATES[city]["longitude"],
+        "start_date": START_DATE,
+        "end_date": END_DATE,
+        "daily": ",".join(VARIABLES),
+        "timezone": "auto",
+    }
+    responses = openmeteo.weather_api(url, params=params)
+    return responses
+
+def validate_response(response):
+    pass
+
+def get_data_meteo_api(city):
     # Call the API and validate the response
     responses = call_api(city)
     if not responses:
@@ -25,7 +41,11 @@ def get_data_meteo_api(city, start_date=START_DATE, end_date=END_DATE):
 
     response = responses[0]
     validate_response(response)
+    return response
 
+## Data processing functions
+
+def process_data(response):
     # Process daily data
     daily = response.Daily()
     daily_temperature_2m_mean = daily.Variables(0).ValuesAsNumpy()
@@ -42,25 +62,16 @@ def get_data_meteo_api(city, start_date=START_DATE, end_date=END_DATE):
     daily_data["temperature_2m_mean"] = daily_temperature_2m_mean
     daily_data["precipitation_sum"] = daily_precipitation_sum
     daily_data["wind_speed_10m_max"] = daily_wind_speed_10m_max
-
     daily_dataframe = pd.DataFrame(data=daily_data)
-    print(f"\nDaily data for {city}\n", daily_dataframe)
 
+    return daily_dataframe
 
-def call_api(city, url=API_URL):
-    params = {
-        "latitude": COORDINATES[city]["latitude"],
-        "longitude": COORDINATES[city]["longitude"],
-        "start_date": START_DATE,
-        "end_date": END_DATE,
-        "daily": ",".join(VARIABLES),
-        "timezone": "auto",
-    }
-    responses = openmeteo.weather_api(url, params=params)
-    return responses
+## Data plotting functions
 
-def validate_response(response):
+def plot_data(dataframe):
     pass
+
+## TEST MAIN
 
 def main():
     for city in COORDINATES.keys():
