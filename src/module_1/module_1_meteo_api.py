@@ -1,14 +1,70 @@
-# Variables and functions for the Meteo API module
+import openmeteo_requests
+import pandas as pd
+import requests_cache
+from retry_requests import retry
 
+# Setup the Open-Meteo API client with cache and retry on error
+cache_session = requests_cache.CachedSession('.cache', expire_after = -1)
+retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
+openmeteo = openmeteo_requests.Client(session = retry_session)
+
+# Variables and functions for the Meteo API module
 API_URL = "<https://archive-api.open-meteo.com/v1/archive?>"
-COORDINATES = { "Madrid": {"latitude": 40.416775, "longitude": -3.703790},
+COORDINATES = { 
+    "Madrid": {"latitude": 40.416775, "longitude": -3.703790},
     "London": {"latitude": 51.507351, "longitude": -0.127758},
     "Rio": {"latitude": -22.906847, "longitude": -43.172896},
 }
 VARIABLES = ["temperature_2m_mean", "precipitation_sum", "wind_speed_10m_max"]
+START_DATE = "2010-01-01"
+END_DATE = "2020-12-31"
+
+
+
+def get_data_meteo_api(city, start_date=START_DATE, end_date=END_DATE):
+    # Call the API and validate the response
+    response = call_api(city)
+    validate_response(response)
+
+    # Process daily data. The order of variables needs to be the same as requested.
+    daily = response.Daily()
+    daily_temperature_2m_mean = daily.Variables(0).ValuesAsNumpy()
+    daily_precipitation_sum = daily.Variables(1).ValuesAsNumpy()
+    daily_wind_speed_10m_max = daily.Variables(2).ValuesAsNumpy()
+
+    daily_data = {"date": pd.date_range(
+        start = pd.to_datetime(daily.Time(), unit = "s", utc = True),
+        end = pd.to_datetime(daily.TimeEnd(), unit = "s", utc = True),
+        freq = pd.Timedelta(seconds = daily.Interval()),
+        inclusive = "left"
+    )}
+
+    daily_data["temperature_2m_mean"] = daily_temperature_2m_mean
+    daily_data["precipitation_sum"] = daily_precipitation_sum
+    daily_data["wind_speed_10m_max"] = daily_wind_speed_10m_max
+
+    daily_dataframe = pd.DataFrame(data = daily_data)
+    print("\nDaily data\n", daily_dataframe)
+
+def call_api(city, url=API_URL):
+    params = {
+        "latitude": COORDINATES[city]["latitude"],
+        "longitude": COORDINATES[city]["longitude"],
+        "start_date": START_DATE,
+        "end_date": END_DATE,
+        "daily": ",".join(VARIABLES),
+        "timezone": "auto",
+    }
+    responses = openmeteo.weather_api(url, params=params)
+    return responses
+
+def validate_response(response):
+    pass
 
 def main():
     raise NotImplementedError
+
+
 
 if __name__ == "__main__":
     main()
