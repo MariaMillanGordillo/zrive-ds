@@ -62,8 +62,9 @@ def validate_response(response):
     pass
 
 def main():
-    raise NotImplementedError
-
+    for city in COORDINATES.keys():
+        print(f"\nGetting data for {city}")
+        get_data_meteo_api(city)
 
 
 if __name__ == "__main__":
