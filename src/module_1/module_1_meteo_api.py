@@ -1,5 +1,6 @@
 import openmeteo_requests
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Setup the Open-Meteo API client
 openmeteo = openmeteo_requests.Client()
@@ -45,7 +46,7 @@ def get_data_meteo_api(city):
 
 ## Data processing functions
 
-def process_data(response):
+def process_data(response, city):
     # Process daily data
     daily = response.Daily()
     daily_temperature_2m_mean = daily.Variables(0).ValuesAsNumpy()
@@ -62,6 +63,7 @@ def process_data(response):
     daily_data["temperature_2m_mean"] = daily_temperature_2m_mean
     daily_data["precipitation_sum"] = daily_precipitation_sum
     daily_data["wind_speed_10m_max"] = daily_wind_speed_10m_max
+    daily_data["city"] = city
     daily_dataframe = pd.DataFrame(data=daily_data)
 
     return daily_dataframe
@@ -74,9 +76,17 @@ def plot_data(dataframe):
 ## TEST MAIN
 
 def main():
+    all_dataframes = []
     for city in COORDINATES.keys():
         print(f"\nGetting data for {city}")
-        get_data_meteo_api(city)
+        response = get_data_meteo_api(city)
+        if response:
+            dataframe = process_data(response, city)
+            all_dataframes.append(dataframe)
+    if all_dataframes:
+        combined_df = pd.concat(all_dataframes, ignore_index=True)
+        print("\nCombined DataFrame:")
+        print(combined_df.sample(5))
 
 
 if __name__ == "__main__":
