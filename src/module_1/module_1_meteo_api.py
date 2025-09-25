@@ -1,15 +1,11 @@
 import openmeteo_requests
 import pandas as pd
-import requests_cache
-from retry_requests import retry
 
-# Setup the Open-Meteo API client with cache and retry on error
-cache_session = requests_cache.CachedSession('.cache', expire_after = -1)
-retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
-openmeteo = openmeteo_requests.Client(session = retry_session)
+# Setup the Open-Meteo API client
+openmeteo = openmeteo_requests.Client()
 
 # Variables and functions for the Meteo API module
-API_URL = "<https://archive-api.open-meteo.com/v1/archive?>"
+API_URL = "https://archive-api.open-meteo.com/v1/archive"
 COORDINATES = { 
     "Madrid": {"latitude": 40.416775, "longitude": -3.703790},
     "London": {"latitude": 51.507351, "longitude": -0.127758},
