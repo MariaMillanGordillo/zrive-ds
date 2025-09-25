@@ -16,31 +16,36 @@ START_DATE = "2010-01-01"
 END_DATE = "2020-12-31"
 
 
-
 def get_data_meteo_api(city, start_date=START_DATE, end_date=END_DATE):
     # Call the API and validate the response
-    response = call_api(city)
+    responses = call_api(city)
+    if not responses:
+        print(f"No data returned for {city}")
+        return
+
+    response = responses[0]
     validate_response(response)
 
-    # Process daily data. The order of variables needs to be the same as requested.
+    # Process daily data
     daily = response.Daily()
     daily_temperature_2m_mean = daily.Variables(0).ValuesAsNumpy()
     daily_precipitation_sum = daily.Variables(1).ValuesAsNumpy()
     daily_wind_speed_10m_max = daily.Variables(2).ValuesAsNumpy()
 
     daily_data = {"date": pd.date_range(
-        start = pd.to_datetime(daily.Time(), unit = "s", utc = True),
-        end = pd.to_datetime(daily.TimeEnd(), unit = "s", utc = True),
-        freq = pd.Timedelta(seconds = daily.Interval()),
-        inclusive = "left"
+        start=pd.to_datetime(daily.Time(), unit="s", utc=True),
+        end=pd.to_datetime(daily.TimeEnd(), unit="s", utc=True),
+        freq=pd.Timedelta(seconds=daily.Interval()),
+        inclusive="left"
     )}
 
     daily_data["temperature_2m_mean"] = daily_temperature_2m_mean
     daily_data["precipitation_sum"] = daily_precipitation_sum
     daily_data["wind_speed_10m_max"] = daily_wind_speed_10m_max
 
-    daily_dataframe = pd.DataFrame(data = daily_data)
-    print("\nDaily data\n", daily_dataframe)
+    daily_dataframe = pd.DataFrame(data=daily_data)
+    print(f"\nDaily data for {city}\n", daily_dataframe)
+
 
 def call_api(city, url=API_URL):
     params = {
