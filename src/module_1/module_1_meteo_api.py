@@ -2,6 +2,8 @@ import openmeteo_requests
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# AÑADIR PABLO EN EL REPO
+
 # Setup the Open-Meteo API client
 openmeteo = openmeteo_requests.Client()
 
@@ -31,7 +33,24 @@ def call_api(city, url=API_URL):
     return responses
 
 def validate_response(response):
-    pass
+    # Check if the response has an 'error' attribute and if it's True
+    if hasattr(response, "error") and response.error:
+        raise ValueError(f"API Error: {getattr(response, 'reason', 'Unknown error')}")
+    
+    # Check for daily data
+    if not response.Daily():
+        raise ValueError("No daily data in response")
+    
+    # Check for expected number of variables
+    if getattr(response.Daily(), "VariablesCount", None) is not None:
+        if response.Daily().VariablesCount() != len(VARIABLES):
+            raise ValueError("Missing expected variables in response")
+    else:
+        for i in range(len(VARIABLES)):
+            try:
+                response.Daily().Variables(i)
+            except Exception:
+                raise ValueError(f"Missing variable at index {i} in response")
 
 def get_data_meteo_api(city):
     # Call the API and validate the response
@@ -77,16 +96,23 @@ def plot_data(dataframe):
 
 def main():
     all_dataframes = []
+
+    # Get and process data for each city
     for city in COORDINATES.keys():
         print(f"\nGetting data for {city}")
         response = get_data_meteo_api(city)
         if response:
             dataframe = process_data(response, city)
             all_dataframes.append(dataframe)
+
+    # Combine all dataframes into one
     if all_dataframes:
         combined_df = pd.concat(all_dataframes, ignore_index=True)
-        print("\nCombined DataFrame:")
+        print("\nCombined DataFrame:\n")
         print(combined_df.sample(5))
+
+        # Plot the combined data
+        plot_data(combined_df)
 
 
 if __name__ == "__main__":
