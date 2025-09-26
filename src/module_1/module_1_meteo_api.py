@@ -202,6 +202,69 @@ def plot_wind(dataframe):
     plt.grid(True)
     plt.show()
 
+def plot_per_city(dataframe):
+    """Plot all weather variables for each city per month.
+    Inputs:
+        dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
+    Returns:
+        None
+    """
+    fig, axes = plt.subplots(3, 1, figsize=(12, 7))
+    cities = dataframe['city'].unique()
+
+    for city in cities:
+        city_data = dataframe[dataframe['city'] == city].copy()
+        city_data['month'] = city_data['date'].dt.tz_localize(None).dt.to_period('M')
+
+        # Temperature
+        monthly_avg_temp = city_data.groupby('month')['temperature_2m_mean'].mean().reset_index()
+        monthly_avg_temp['month'] = monthly_avg_temp['month'].dt.to_timestamp()
+        axes[0].plot(monthly_avg_temp['month'], monthly_avg_temp['temperature_2m_mean'], label=city)
+
+        # Precipitation
+        monthly_total_precip = city_data.groupby('month')['precipitation_sum'].sum().reset_index()
+        monthly_total_precip['month'] = monthly_total_precip['month'].dt.to_timestamp()
+        axes[1].plot(monthly_total_precip['month'], monthly_total_precip['precipitation_sum'], label=city)
+
+        # Wind Speed
+        monthly_max_wind = city_data.groupby('month')['wind_speed_10m_max'].max().reset_index()
+        monthly_max_wind['month'] = monthly_max_wind['month'].dt.to_timestamp()
+        axes[2].plot(monthly_max_wind['month'], monthly_max_wind['wind_speed_10m_max'], label=city)
+    
+    # Plot axes titles and labels
+    axes[0].set_title('Average Monthly Temperature by City')
+    axes[0].set_xlabel('Month')
+    axes[0].set_ylabel('Average Temperature (°C)')
+    axes[0].legend()
+    axes[0].grid(True)
+
+    axes[1].set_title('Total Monthly Precipitation by City')
+    axes[1].set_xlabel('Month')
+    axes[1].set_ylabel('Total Precipitation (mm)')
+    axes[1].legend()
+    axes[1].grid(True)
+
+    axes[2].set_title('Maximum Monthly Wind Speed by City')
+    axes[2].set_xlabel('Month')
+    axes[2].set_ylabel('Maximum Wind Speed (m/s)')
+    axes[2].legend()
+    axes[2].grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_all(dataframe):
+    """Plot all weather variables for each city per month.
+    Inputs:
+        dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
+    Returns:
+        None
+    """
+    plot_temperature(dataframe)
+    plot_precipitation(dataframe)
+    plot_wind(dataframe)
+    plot_per_city(dataframe)
 
 ## TEST MAIN
 
@@ -223,9 +286,7 @@ def main():
         print(combined_df.sample(5))
 
         # Plot the combined data
-        plot_temperature(combined_df)
-        plot_precipitation(combined_df)
-        plot_wind(combined_df)
+        plot_all(combined_df)
 
 
 if __name__ == "__main__":
