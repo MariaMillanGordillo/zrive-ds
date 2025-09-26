@@ -21,6 +21,13 @@ END_DATE = "2020-12-31"
 ## API functions
 
 def call_api(city, url=API_URL):
+    """Call the Open-Meteo API for a given city and return the response.
+    Inputs:
+        city (str): Name of the city to get data for.
+        url (str): API endpoint URL.
+    Returns:
+        response (object): API response object.
+    """
     params = {
         "latitude": COORDINATES[city]["latitude"],
         "longitude": COORDINATES[city]["longitude"],
@@ -33,6 +40,12 @@ def call_api(city, url=API_URL):
     return responses
 
 def validate_response(response):
+    """Validate the API response for errors and expected data.
+    Inputs:
+        response (object): API response object.
+    Raises:
+        ValueError: If the response contains an error or is missing expected data.
+    """
     # Check if the response has an 'error' attribute and if it's True
     if hasattr(response, "error") and response.error:
         raise ValueError(f"API Error: {getattr(response, 'reason', 'Unknown error')}")
@@ -53,6 +66,12 @@ def validate_response(response):
                 raise ValueError(f"Missing variable at index {i} in response")
 
 def get_data_meteo_api(city):
+    """Get and validate data from the Open-Meteo API for a given city.
+    Inputs:
+        city (str): Name of the city to get data for.
+    Returns:
+        response (object): Validated API response object.
+    """
     # Call the API and validate the response
     responses = call_api(city)
     if not responses:
@@ -66,6 +85,13 @@ def get_data_meteo_api(city):
 ## Data processing functions
 
 def process_data(response, city):
+    """Process the API response and convert it into a pandas DataFrame.
+    Inputs:
+        response (object): Validated API response object.
+        city (str): Name of the city the data corresponds to.
+    Returns:
+        daily_dataframe (pd.DataFrame): DataFrame containing the processed daily data.
+    """
     # Process daily data
     daily = response.Daily()
     daily_temperature_2m_mean = daily.Variables(0).ValuesAsNumpy()
@@ -90,6 +116,12 @@ def process_data(response, city):
 ## Data plotting functions
 
 def plot_data(dataframe):
+    """Plot the daily temperature data for each city.
+    Inputs:
+        dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
+    Returns:
+        None
+    """
     pass
 
 ## TEST MAIN
