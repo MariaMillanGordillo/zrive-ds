@@ -20,23 +20,41 @@ END_DATE = "2020-12-31"
 
 ## API functions
 
-def call_api(city, url=API_URL):
+def call_api(city, url=API_URL, params=None, retries=3, backoff=3):
     """Call the Open-Meteo API for a given city and return the response.
     Inputs:
         city (str): Name of the city to get data for.
         url (str): API endpoint URL.
+        params (dict): Additional parameters for the API call.
+        retries (int): Number of retries for the API call in case of failure.
+        backoff (int): Backoff time in seconds between retries.
     Returns:
         response (object): API response object.
     """
-    params = {
-        "latitude": COORDINATES[city]["latitude"],
-        "longitude": COORDINATES[city]["longitude"],
-        "start_date": START_DATE,
-        "end_date": END_DATE,
-        "daily": ",".join(VARIABLES),
-        "timezone": "auto",
-    }
-    responses = openmeteo.weather_api(url, params=params)
+    if not params:
+        params = {
+            "latitude": COORDINATES[city]["latitude"],
+            "longitude": COORDINATES[city]["longitude"],
+            "start_date": START_DATE,
+            "end_date": END_DATE,
+            "daily": ",".join(VARIABLES),
+            "timezone": "auto",
+        }
+    
+    for attempt in range(retries):
+        try:
+            responses = openmeteo.weather_api(url, params=params)
+            return responses
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < retries - 1:
+                print(f"Retrying in {backoff} seconds...")
+                import time
+                time.sleep(backoff)
+            else:
+                print("All attempts failed.")
+                raise e
+    
     return responses
 
 def validate_response(response):
