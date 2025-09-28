@@ -20,7 +20,7 @@ END_DATE = "2020-12-31"
 
 
 def call_api(city, url=API_URL, params=None, retries=3, backoff=3):
-    """Call the Open-Meteo API for a given city and return the response.
+    """ Call the Open-Meteo API for a given city and return the response.
     Inputs:
         city (str): Name of the city to get data for.
         url (str): API endpoint URL.
@@ -59,7 +59,7 @@ def call_api(city, url=API_URL, params=None, retries=3, backoff=3):
 
 
 def validate_response(response):
-    """Validate the API response for errors and expected data.
+    """ Validate the API response for errors and expected data.
     Inputs:
         response (object): API response object.
     Raises:
@@ -86,7 +86,7 @@ def validate_response(response):
 
 
 def get_data_meteo_api(city):
-    """Get and validate data from the Open-Meteo API for a given city.
+    """ Get and validate data from the Open-Meteo API for a given city.
     Inputs:
         city (str): Name of the city to get data for.
     Returns:
@@ -107,7 +107,7 @@ def get_data_meteo_api(city):
 
 
 def process_data(response, city):
-    """Process the API response and convert it into a pandas DataFrame.
+    """ Process the API response and convert it into a pandas DataFrame.
     Inputs:
         response (object): Validated API response object.
         city (str): Name of the city the data corresponds to.
@@ -142,7 +142,7 @@ def process_data(response, city):
 
 
 def plot_temperature(dataframe):
-    """Plot the average temperature data for each city per month.
+    """ Plot the average temperature data for each city per month.
     Inputs:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
@@ -168,7 +168,7 @@ def plot_temperature(dataframe):
 
 
 def plot_precipitation(dataframe):
-    """Plot the total precipitation data for each city per month.
+    """ Plot the total precipitation data for each city per month.
     Inputs:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
@@ -194,7 +194,7 @@ def plot_precipitation(dataframe):
 
 
 def plot_wind(dataframe):
-    """Plot the maximum wind speed data for each city per month.
+    """ Plot the maximum wind speed data for each city per month.
     Inputs:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
@@ -220,7 +220,7 @@ def plot_wind(dataframe):
 
 
 def plot_per_city(dataframe):
-    """Plot all weather variables for each city per month.
+    """ Plot all weather variables for each city per month.
     Inputs:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
@@ -290,7 +290,7 @@ def plot_per_city(dataframe):
 
 
 def plot_all(dataframe):
-    """Plot all weather variables for each city per month.
+    """ Plot all weather variables for all cities.
     Inputs:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
