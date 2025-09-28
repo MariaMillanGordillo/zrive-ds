@@ -43,15 +43,3 @@ def test_process_data(response=response):
     for col in expected_columns:
         assert col in dataframe.columns, f"Missing expected column: {col}"
     print("test_process_data passed.")
-
-
-def test_all(response=response):
-    test_call_api()
-    test_get_data_meteo_api()
-    test_validate_response()
-    test_process_data()
-    print("All tests passed.")
-
-
-if __name__ == "__main__":
-    test_all()
