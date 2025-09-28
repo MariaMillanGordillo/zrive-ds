@@ -142,80 +142,149 @@ def process_data(response, city):
 
 
 def plot_temperature(dataframe):
-    """ Plot the average temperature data for each city per month.
+    """ Plot the average monthly temperature for each city with subplots,
+    comparing months across years.
     Inputs:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
     """
-    dataframe["month"] = dataframe["date"].dt.tz_localize(None).dt.to_period("M")
+    df = dataframe.copy()
+    df["date"] = df["date"].dt.tz_localize(None)
+    df["year"] = df["date"].dt.year
+    df["month"] = df["date"].dt.month
+
     monthly_avg = (
-        dataframe.groupby(["city", "month"])["temperature_2m_mean"].mean().reset_index()
+        df.groupby(["city", "year", "month"])["temperature_2m_mean"]
+        .mean()
+        .reset_index()
     )
-    monthly_avg["month"] = monthly_avg["month"].dt.to_timestamp()
 
-    plt.figure(figsize=(12, 6))
-    for city in monthly_avg["city"].unique():
+    cities = monthly_avg["city"].unique()
+    fig, axes = plt.subplots(len(cities), 1, figsize=(11, 8), sharex=True)
+
+    for ax, city in zip(axes, cities):
         city_data = monthly_avg[monthly_avg["city"] == city]
-        plt.plot(city_data["month"], city_data["temperature_2m_mean"], label=city)
 
-    plt.title("Average Monthly Temperature by City")
-    plt.xlabel("Month")
-    plt.ylabel("Average Temperature (°C)")
-    plt.legend()
-    plt.grid(True)
+        for year in city_data["year"].unique():
+            year_data = city_data[city_data["year"] == year]
+            ax.plot(
+                year_data["month"],
+                year_data["temperature_2m_mean"],
+                marker="o",
+                label=str(year)
+            )
+
+        ax.set_title(f"Average Monthly Temperature in {city}")
+        ax.set_ylabel("°C")
+        ax.legend(title="Year", loc='center left', bbox_to_anchor=(1, 0.5))
+        ax.grid(True)
+
+    axes[-1].set_xlabel("Month")
+    axes[-1].set_xticks(range(1, 13))
+    axes[-1].set_xticklabels(
+        ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    )
+    fig.tight_layout(rect=[0, 0, 0.97, 1])
     plt.show()
 
 
 def plot_precipitation(dataframe):
-    """ Plot the total precipitation data for each city per month.
+    """ Plot the total monthly precipitation for each city with subplots,
+    comparing months across years.
     Inputs:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
     """
-    dataframe["month"] = dataframe["date"].dt.tz_localize(None).dt.to_period("M")
+    df = dataframe.copy()
+    df["date"] = df["date"].dt.tz_localize(None)
+    df["year"] = df["date"].dt.year
+    df["month"] = df["date"].dt.month
+
     monthly_total = (
-        dataframe.groupby(["city", "month"])["precipitation_sum"].sum().reset_index()
+        df.groupby(["city", "year", "month"])["precipitation_sum"]
+        .sum()
+        .reset_index()
     )
-    monthly_total["month"] = monthly_total["month"].dt.to_timestamp()
 
-    plt.figure(figsize=(12, 6))
-    for city in monthly_total["city"].unique():
+    cities = monthly_total["city"].unique()
+    fig, axes = plt.subplots(len(cities), 1, figsize=(11, 8), sharex=True)
+
+    for ax, city in zip(axes, cities):
         city_data = monthly_total[monthly_total["city"] == city]
-        plt.plot(city_data["month"], city_data["precipitation_sum"], label=city)
 
-    plt.title("Total Monthly Precipitation by City")
-    plt.xlabel("Month")
-    plt.ylabel("Total Precipitation (mm)")
-    plt.legend()
-    plt.grid(True)
+        for year in city_data["year"].unique():
+            year_data = city_data[city_data["year"] == year]
+            ax.plot(
+                year_data["month"],
+                year_data["precipitation_sum"],
+                marker="o",
+                label=str(year)
+            )
+
+        ax.set_title(f"Monthly Precipitation in {city}")
+        ax.set_ylabel("mm")
+        ax.legend(title="Year", loc='center left', bbox_to_anchor=(1, 0.5))
+        ax.grid(True)
+
+    axes[-1].set_xlabel("Month")
+    axes[-1].set_xticks(range(1, 13))
+    axes[-1].set_xticklabels(
+        ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    )
+    fig.tight_layout(rect=[0, 0, 0.97, 1])
     plt.show()
 
 
 def plot_wind(dataframe):
-    """ Plot the maximum wind speed data for each city per month.
+    """ Plot the maximum monthly wind speed for each city with subplots,
+    comparing months across years.
     Inputs:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
     """
-    dataframe["month"] = dataframe["date"].dt.tz_localize(None).dt.to_period("M")
+    df = dataframe.copy()
+    df["date"] = df["date"].dt.tz_localize(None)
+    df["year"] = df["date"].dt.year
+    df["month"] = df["date"].dt.month
+
     monthly_max = (
-        dataframe.groupby(["city", "month"])["wind_speed_10m_max"].max().reset_index()
+        df.groupby(["city", "year", "month"])["wind_speed_10m_max"]
+        .max()
+        .reset_index()
     )
-    monthly_max["month"] = monthly_max["month"].dt.to_timestamp()
 
-    plt.figure(figsize=(12, 6))
-    for city in monthly_max["city"].unique():
+    cities = monthly_max["city"].unique()
+    fig, axes = plt.subplots(len(cities), 1, figsize=(11, 8), sharex=True)
+
+    for ax, city in zip(axes, cities):
         city_data = monthly_max[monthly_max["city"] == city]
-        plt.plot(city_data["month"], city_data["wind_speed_10m_max"], label=city)
 
-    plt.title("Maximum Monthly Wind Speed by City")
-    plt.xlabel("Month")
-    plt.ylabel("Maximum Wind Speed (m/s)")
-    plt.legend()
-    plt.grid(True)
+        for year in city_data["year"].unique():
+            year_data = city_data[city_data["year"] == year]
+            ax.plot(
+                year_data["month"],
+                year_data["wind_speed_10m_max"],
+                marker="o",
+                label=str(year)
+            )
+
+        ax.set_title(f"Maximum Monthly Wind Speed in {city}")
+        ax.set_ylabel("m/s")
+        ax.legend(title="Year", loc='center left', bbox_to_anchor=(1, 0.5))
+        ax.grid(True)
+
+    axes[-1].set_xlabel("Month")
+    axes[-1].set_xticks(range(1, 13))
+    axes[-1].set_xticklabels(
+        ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    )
+    fig.tight_layout(rect=[0, 0, 0.97, 1])
     plt.show()
 
 
