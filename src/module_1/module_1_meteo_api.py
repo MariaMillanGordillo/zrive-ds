@@ -1,5 +1,6 @@
 import time
 import logging
+import requests
 import pandas as pd
 import openmeteo_requests
 from typing import Optional
@@ -70,15 +71,26 @@ def call_api(
     for attempt in range(retries):
         try:
             responses = openmeteo.weather_api(url, params=params)
+            if not responses:
+                logging.warning(f"No data returned for {city}.")
+                return None
             return responses
+
+        except requests.exceptions.HTTPError as e:
+            logging.error(f"HTTP error on attempt {attempt + 1}: {e}")
+        except requests.exceptions.ConnectionError as e:
+            logging.error(f"Connection error on attempt {attempt + 1}: {e}")
+        except requests.exceptions.Timeout as e:
+            logging.error(f"Timeout on attempt {attempt + 1}: {e}")
         except Exception as e:
-            logging.error(f"Attempt {attempt + 1} failed: {e}")
-            if attempt < retries - 1:
-                logging.info(f"Retrying in {backoff} seconds...")
-                time.sleep(backoff)
-            else:
-                logging.critical("All attempts failed.")
-                raise e
+            logging.exception(f"Unexpected error on attempt {attempt + 1}: {e}")
+
+        if attempt < retries - 1:
+            logging.info(f"Retrying in {backoff} seconds...")
+            time.sleep(backoff)
+        else:
+            logging.critical("All attempts failed.")
+            raise e
 
     return responses
 
