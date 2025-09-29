@@ -1,6 +1,15 @@
-import openmeteo_requests
+import time
+import logging
 import pandas as pd
+import openmeteo_requests
+from typing import Optional
 import matplotlib.pyplot as plt
+
+# Logging configuration
+logging.basicConfig(
+    level=logging.INFO, # Info level for general information
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # Setup the Open-Meteo API client
 openmeteo = openmeteo_requests.Client()
@@ -19,7 +28,13 @@ END_DATE = "2020-12-31"
 # API functions
 
 
-def call_api(city, url=API_URL, params=None, retries=3, backoff=3):
+def call_api(
+        city: str, 
+        url: str = API_URL, 
+        params: Optional[dict[str, str]] = None, 
+        retries: int = 3, 
+        backoff: int = 3
+) -> Optional[dict]:
     """ Call the Open-Meteo API for a given city and return the response.
     Inputs:
         city (str): Name of the city to get data for.
@@ -45,14 +60,12 @@ def call_api(city, url=API_URL, params=None, retries=3, backoff=3):
             responses = openmeteo.weather_api(url, params=params)
             return responses
         except Exception as e:
-            print(f"Attempt {attempt + 1} failed: {e}")
+            logging.error(f"Attempt {attempt + 1} failed: {e}")
             if attempt < retries - 1:
-                print(f"Retrying in {backoff} seconds...")
-                import time
-
+                logging.info(f"Retrying in {backoff} seconds...")
                 time.sleep(backoff)
             else:
-                print("All attempts failed.")
+                logging.critical("All attempts failed.")
                 raise e
 
     return responses
@@ -95,7 +108,7 @@ def get_data_meteo_api(city):
     # Call the API and validate the response
     responses = call_api(city)
     if not responses:
-        print(f"No data returned for {city}")
+        logging.error(f"No data returned for {city}")
         return
 
     response = responses[0]
@@ -379,22 +392,25 @@ def main():
 
     # Get and process data for each city
     for city in COORDINATES.keys():
-        print(f"\nGetting data for {city}")
+        logging.info(f"Getting data for {city}")
         response = get_data_meteo_api(city)
         if response:
             dataframe = process_data(response, city)
             all_dataframes.append(dataframe)
         else:
-            print(f"Skipping {city} due to no data.")
+            logging.warning(f"Skipping {city} due to no data.")
 
     # Combine all dataframes into one
     if all_dataframes:
         combined_df = pd.concat(all_dataframes, ignore_index=True)
-        print("\nCombined DataFrame:\n")
-        print(combined_df.sample(5))
+        logging.debug("DataFrames successfully combined.")  # Debug = más técnico
+        logging.info("Showing a sample of the combined DataFrame:")
+        logging.info("\n%s", combined_df.sample(5).to_string())
 
         # Plot the combined data
         plot_all(combined_df)
+    else:
+        logging.error("No dataframes were created.")
 
 
 if __name__ == "__main__":
