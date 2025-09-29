@@ -35,15 +35,27 @@ def call_api(
         retries: int = 3, 
         backoff: int = 3
 ) -> Optional[dict]:
-    """ Call the Open-Meteo API for a given city and return the response.
-    Inputs:
-        city (str): Name of the city to get data for.
-        url (str): API endpoint URL.
-        params (dict): Additional parameters for the API call.
-        retries (int): Number of retries for the API call in case of failure.
-        backoff (int): Backoff time in seconds between retries.
+    """
+    Call the weather API for a specific city.
+    Args:
+        city (str): Name of the city to request data for. 
+            Example: "Madrid", "London".
+        url (str, optional): API endpoint URL. Defaults to the global constant API_URL. 
+            Normally you should not override this unless you are testing a different API base.
+        params (dict[str, str], optional): Additional query parameters to include in the request. 
+            Common keys include:
+                - "latitude": Latitude of the city (float).
+                - "longitude": Longitude of the city (float).
+                - "start_date": Start date for the data in "YYYY-MM-DD" format (str).
+                - "end_date": End date for the data in "YYYY-MM-DD" format (str).
+                - "daily": Comma-separated list of weather variables to retrieve (str).
+                - "timezone": Timezone for the data (str).
+            Defaults to None, meaning only the required parameters will be sent.
+        retries (int, optional): Maximum number of times to retry the request if it fails. Defaults to 3.
+        backoff (int, optional): Number of seconds to wait between retries. Defaults to 3.
     Returns:
-        response (object): API response object.
+        dict | None: Parsed JSON response from the API as a dictionary, 
+        or None if the request failed after all retries.
     """
     if not params:
         params = {
@@ -72,11 +84,15 @@ def call_api(
 
 
 def validate_response(response):
-    """ Validate the API response for errors and expected data.
-    Inputs:
-        response (object): API response object.
+    """
+    Validate the API response to ensure it contains the expected data.
+    Raises an error if the response is invalid or missing expected data.
+    Args:
+        response (object): The API response object to validate.
     Raises:
         ValueError: If the response contains an error or is missing expected data.
+    Returns:
+        None
     """
     # Check if the response has an 'error' attribute and if it's True
     if hasattr(response, "error") and response.error:
@@ -99,11 +115,13 @@ def validate_response(response):
 
 
 def get_data_meteo_api(city):
-    """ Get and validate data from the Open-Meteo API for a given city.
-    Inputs:
-        city (str): Name of the city to get data for.
+    """
+    Get and validate weather data for a specific city from the Meteo API.
+    Args:
+        city (str): Name of the city to request data for.
+        Example: "Madrid", "London".
     Returns:
-        response (object): Validated API response object.
+        object | None: Validated API response object, or None if no data was returned.
     """
     # Call the API and validate the response
     responses = call_api(city)
@@ -120,12 +138,14 @@ def get_data_meteo_api(city):
 
 
 def process_data(response, city):
-    """ Process the API response and convert it into a pandas DataFrame.
-    Inputs:
+    """
+    Process the API response and convert it into a pandas DataFrame.
+    Args:
         response (object): Validated API response object.
         city (str): Name of the city the data corresponds to.
+        Example: "Madrid", "London".
     Returns:
-        daily_dataframe (pd.DataFrame): DataFrame containing the processed daily data.
+        pd.DataFrame: DataFrame containing the processed daily weather data.
     """
     # Process daily data
     daily = response.Daily()
@@ -155,9 +175,10 @@ def process_data(response, city):
 
 
 def plot_temperature(dataframe):
-    """ Plot the average monthly temperature for each city with subplots,
+    """
+    Plot the average monthly temperature for each city with subplots,
     comparing months across years.
-    Inputs:
+    Args:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
@@ -204,9 +225,10 @@ def plot_temperature(dataframe):
 
 
 def plot_precipitation(dataframe):
-    """ Plot the total monthly precipitation for each city with subplots,
+    """
+    Plot the total monthly precipitation for each city with subplots,
     comparing months across years.
-    Inputs:
+    Args:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
@@ -253,9 +275,10 @@ def plot_precipitation(dataframe):
 
 
 def plot_wind(dataframe):
-    """ Plot the maximum monthly wind speed for each city with subplots,
+    """
+    Plot the maximum monthly wind speed for each city with subplots,
     comparing months across years.
-    Inputs:
+    Args:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
@@ -302,8 +325,9 @@ def plot_wind(dataframe):
 
 
 def plot_per_city(dataframe):
-    """ Plot all weather variables for each city per month.
-    Inputs:
+    """
+    Plot all weather variables for each city in a single figure with subplots.
+    Args:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
@@ -372,8 +396,9 @@ def plot_per_city(dataframe):
 
 
 def plot_all(dataframe):
-    """ Plot all weather variables for all cities.
-    Inputs:
+    """
+    Plot all weather variables using the defined plotting functions.
+    Args:
         dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
@@ -388,6 +413,9 @@ def plot_all(dataframe):
 
 
 def main():
+    """
+    Main function to get, process, and plot weather data for multiple cities.
+    """
     all_dataframes = []
 
     # Get and process data for each city
