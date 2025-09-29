@@ -92,7 +92,6 @@ def call_api(
         return None
 
 
-
 def validate_response(response):
     """
     Validate the API response to ensure it contains the expected data.
@@ -179,44 +178,45 @@ def process_data(response, city, variables=VARIABLES):
 
 # Data plotting functions
 
-
-def plot_temperature(df):
+def plot_variable(df, variable, title):
     """
-    Plot the average monthly temperature for each city with subplots,
+    Plot a specific weather variable for each city with subplots,
     comparing months across years.
     Args:
         df (pd.DataFrame): DataFrame containing the daily data for all cities.
+        variable (str): The weather variable to plot (e.g., "temperature_2m_mean").
+        title (str): Title for the plot.
     Returns:
-        None
+        fig, axes: Matplotlib figure and axes objects.
     """
     data = df.copy()
     data["date"] = data["date"].dt.tz_localize(None)
     data["year"] = data["date"].dt.year
     data["month"] = data["date"].dt.month
 
-    monthly_avg = (
-        data.groupby(["city", "year", "month"])["temperature_2m_mean"]
-        .mean()
+    monthly_data = (
+        data.groupby(["city", "year", "month"])[variable]
+        .agg("mean" if "temperature" in variable else "sum" if "precipitation" in variable else "max")
         .reset_index()
     )
 
-    cities = monthly_avg["city"].unique()
+    cities = monthly_data["city"].unique()
     fig, axes = plt.subplots(len(cities), 1, figsize=(11, 8), sharex=True)
 
     for ax, city in zip(axes, cities):
-        city_data = monthly_avg[monthly_avg["city"] == city]
+        city_data = monthly_data[monthly_data["city"] == city]
 
         for year in city_data["year"].unique():
             year_data = city_data[city_data["year"] == year]
             ax.plot(
                 year_data["month"],
-                year_data["temperature_2m_mean"],
+                year_data[variable],
                 marker="o",
                 label=str(year)
             )
 
-        ax.set_title(f"Average Monthly Temperature in {city}")
-        ax.set_ylabel("°C")
+        ax.set_title(f"{title} in {city}")
+        ax.set_ylabel("°C" if "temperature" in variable else "mm" if "precipitation" in variable else "m/s")
         ax.legend(title="Year", loc='center left', bbox_to_anchor=(1, 0.5))
         ax.grid(True)
 
@@ -228,191 +228,93 @@ def plot_temperature(df):
     )
     fig.tight_layout(rect=[0, 0, 0.97, 1])
     plt.show()
+    return fig, axes
 
 
-def plot_precipitation(df):
-    """
-    Plot the total monthly precipitation for each city with subplots,
-    comparing months across years.
-    Args:
-        df (pd.DataFrame): DataFrame containing the daily data for all cities.
-    Returns:
-        None
-    """
-    data = df.copy()
-    data["date"] = data["date"].dt.tz_localize(None)
-    data["year"] = data["date"].dt.year
-    data["month"] = data["date"].dt.month
-
-    monthly_total = (
-        data.groupby(["city", "year", "month"])["precipitation_sum"]
-        .sum()
-        .reset_index()
-    )
-
-    cities = monthly_total["city"].unique()
-    fig, axes = plt.subplots(len(cities), 1, figsize=(11, 8), sharex=True)
-
-    for ax, city in zip(axes, cities):
-        city_data = monthly_total[monthly_total["city"] == city]
-
-        for year in city_data["year"].unique():
-            year_data = city_data[city_data["year"] == year]
-            ax.plot(
-                year_data["month"],
-                year_data["precipitation_sum"],
-                marker="o",
-                label=str(year)
-            )
-
-        ax.set_title(f"Monthly Precipitation in {city}")
-        ax.set_ylabel("mm")
-        ax.legend(title="Year", loc='center left', bbox_to_anchor=(1, 0.5))
-        ax.grid(True)
-
-    axes[-1].set_xlabel("Month")
-    axes[-1].set_xticks(range(1, 13))
-    axes[-1].set_xticklabels(
-        ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    )
-    fig.tight_layout(rect=[0, 0, 0.97, 1])
-    plt.show()
-
-
-def plot_wind(df):
-    """
-    Plot the maximum monthly wind speed for each city with subplots,
-    comparing months across years.
-    Args:
-        df (pd.DataFrame): DataFrame containing the daily data for all cities.
-    Returns:
-        None
-    """
-    data = df.copy()
-    data["date"] = data["date"].dt.tz_localize(None)
-    data["year"] = data["date"].dt.year
-    data["month"] = data["date"].dt.month
-
-    monthly_max = (
-        data.groupby(["city", "year", "month"])["wind_speed_10m_max"]
-        .max()
-        .reset_index()
-    )
-
-    cities = monthly_max["city"].unique()
-    fig, axes = plt.subplots(len(cities), 1, figsize=(11, 8), sharex=True)
-
-    for ax, city in zip(axes, cities):
-        city_data = monthly_max[monthly_max["city"] == city]
-
-        for year in city_data["year"].unique():
-            year_data = city_data[city_data["year"] == year]
-            ax.plot(
-                year_data["month"],
-                year_data["wind_speed_10m_max"],
-                marker="o",
-                label=str(year)
-            )
-
-        ax.set_title(f"Maximum Monthly Wind Speed in {city}")
-        ax.set_ylabel("m/s")
-        ax.legend(title="Year", loc='center left', bbox_to_anchor=(1, 0.5))
-        ax.grid(True)
-
-    axes[-1].set_xlabel("Month")
-    axes[-1].set_xticks(range(1, 13))
-    axes[-1].set_xticklabels(
-        ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    )
-    fig.tight_layout(rect=[0, 0, 0.97, 1])
-    plt.show()
-
-
-def plot_per_city(df):
+def plot_per_city(df: pd.DataFrame, variables=VARIABLES):
     """
     Plot all weather variables for each city in a single figure with subplots.
+    
     Args:
         df (pd.DataFrame): DataFrame containing the daily data for all cities.
+        variables (list[str], optional): List of variables to plot. Defaults to global VARIABLES.
+    
     Returns:
-        None
+        fig, axes: Matplotlib figure and list of axes objects.
     """
-    fig, axes = plt.subplots(3, 1, figsize=(12, 7))
+    n_vars = len(variables)
+    fig, axes = plt.subplots(n_vars, 1, figsize=(12, 4 * n_vars))
+    if n_vars == 1:
+        axes = [axes]  # para que sea iterable siempre
+
     cities = df["city"].unique()
 
-    for city in cities:
-        city_data = df[df["city"] == city].copy()
-        city_data["month"] = city_data["date"].dt.tz_localize(None).dt.to_period("M")
+    for i, var in enumerate(variables):
+        # Determinar agregación según tipo de variable
+        if "temperature" in var:
+            agg = "mean"
+            ylabel = "Average Temperature (°C)"
+        elif "precipitation" in var:
+            agg = "sum"
+            ylabel = "Total Precipitation (mm)"
+        elif "wind_speed" in var:
+            agg = "max"
+            ylabel = "Maximum Wind Speed (m/s)"
+        else:
+            agg = "mean"
+            ylabel = var.replace("_", " ").capitalize()
 
-        # Temperature
-        monthly_avg_temp = (
-            city_data.groupby("month")["temperature_2m_mean"].mean().reset_index()
-        )
-        monthly_avg_temp["month"] = monthly_avg_temp["month"].dt.to_timestamp()
-        axes[0].plot(
-            monthly_avg_temp["month"],
-            monthly_avg_temp["temperature_2m_mean"],
-            label=city,
-        )
+        for city in cities:
+            city_data = df[df["city"] == city].copy()
+            city_data["month"] = city_data["date"].dt.tz_localize(None).dt.to_period("M")
 
-        # Precipitation
-        monthly_total_precip = (
-            city_data.groupby("month")["precipitation_sum"].sum().reset_index()
-        )
-        monthly_total_precip["month"] = monthly_total_precip["month"].dt.to_timestamp()
-        axes[1].plot(
-            monthly_total_precip["month"],
-            monthly_total_precip["precipitation_sum"],
-            label=city,
-        )
+            if agg == "mean":
+                monthly = city_data.groupby("month")[var].mean().reset_index()
+            elif agg == "sum":
+                monthly = city_data.groupby("month")[var].sum().reset_index()
+            elif agg == "max":
+                monthly = city_data.groupby("month")[var].max().reset_index()
 
-        # Wind Speed
-        monthly_max_wind = (
-            city_data.groupby("month")["wind_speed_10m_max"].max().reset_index()
-        )
-        monthly_max_wind["month"] = monthly_max_wind["month"].dt.to_timestamp()
-        axes[2].plot(
-            monthly_max_wind["month"],
-            monthly_max_wind["wind_speed_10m_max"],
-            label=city,
-        )
+            monthly["month"] = monthly["month"].dt.to_timestamp()
+            axes[i].plot(monthly["month"], monthly[var], label=city)
 
-    # Plot axes titles and labels
-    axes[0].set_title("Average Monthly Temperature by City")
-    axes[0].set_xlabel("Month")
-    axes[0].set_ylabel("Average Temperature (°C)")
-    axes[0].legend()
-    axes[0].grid(True)
-
-    axes[1].set_title("Total Monthly Precipitation by City")
-    axes[1].set_xlabel("Month")
-    axes[1].set_ylabel("Total Precipitation (mm)")
-    axes[1].legend()
-    axes[1].grid(True)
-
-    axes[2].set_title("Maximum Monthly Wind Speed by City")
-    axes[2].set_xlabel("Month")
-    axes[2].set_ylabel("Maximum Wind Speed (m/s)")
-    axes[2].legend()
-    axes[2].grid(True)
+        # Etiquetas y título del subplot
+        axes[i].set_title(var.replace("_", " ").capitalize())
+        axes[i].set_xlabel("Month")
+        axes[i].set_ylabel(ylabel)
+        axes[i].legend()
+        axes[i].grid(True)
 
     plt.tight_layout()
-    plt.show()
+    return fig, axes
 
 
-def plot_all(df):
+def plot_all(df, variables=VARIABLES):
     """
     Plot all weather variables using the defined plotting functions.
+    
     Args:
         df (pd.DataFrame): DataFrame containing the daily data for all cities.
+        variables (list, optional): List of variable names to plot. Defaults to the global constant VARIABLES.
+    
     Returns:
         None
     """
-    plot_temperature(df)
-    plot_precipitation(df)
-    plot_wind(df)
-    plot_per_city(df)
+    # Plot each variable individually
+    for variable in variables:
+        title = (
+            "Average Monthly Temperature"
+            if "temperature" in variable
+            else "Total Monthly Precipitation"
+            if "precipitation" in variable
+            else "Maximum Monthly Wind Speed"
+        )
+        fig, axes = plot_variable(df, variable, title)
+        plt.show()
+
+    # Plot all variables per city
+    fig, axes = plot_per_city(df, variables)
+    plt.show()
 
 
 def main():
