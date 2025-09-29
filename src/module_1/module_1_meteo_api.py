@@ -2,9 +2,11 @@ import time
 import logging
 import requests
 import pandas as pd
+import requests_cache
 import openmeteo_requests
 from typing import Optional
 import matplotlib.pyplot as plt
+from retry_requests import retry
 
 # Logging configuration
 logging.basicConfig(
@@ -12,8 +14,10 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# Setup the Open-Meteo API client
-openmeteo = openmeteo_requests.Client()
+# Setup the Open-Meteo API client with cache and retry on error
+cache_session = requests_cache.CachedSession('.cache', expire_after = -1)
+retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
+openmeteo = openmeteo_requests.Client(session = retry_session)
 
 # Variables and functions for the Meteo API module
 API_URL = "https://archive-api.open-meteo.com/v1/archive"
@@ -32,9 +36,7 @@ END_DATE = "2020-12-31"
 def call_api(
         city: str, 
         url: str = API_URL, 
-        params: Optional[dict[str, str]] = None, 
-        retries: int = 3, 
-        backoff: int = 3
+        params: Optional[dict[str, str]] = None
 ) -> Optional[dict]:
     """
     Call the weather API for a specific city.
@@ -52,8 +54,6 @@ def call_api(
                 - "daily": Comma-separated list of weather variables to retrieve (str).
                 - "timezone": Timezone for the data (str).
             Defaults to None, meaning only the required parameters will be sent.
-        retries (int, optional): Maximum number of times to retry the request if it fails. Defaults to 3.
-        backoff (int, optional): Number of seconds to wait between retries. Defaults to 3.
     Returns:
         dict | None: Parsed JSON response from the API as a dictionary, 
         or None if the request failed after all retries.
@@ -68,31 +68,29 @@ def call_api(
             "timezone": "auto",
         }
 
-    for attempt in range(retries):
-        try:
-            responses = openmeteo.weather_api(url, params=params)
-            if not responses:
-                logging.warning(f"No data returned for {city}.")
-                return None
-            return responses
+    try:
+        responses = openmeteo.weather_api(url, params=params)
+        if not responses:
+            logging.warning(f"No data returned for {city}.")
+            return None
+        return responses
 
-        except requests.exceptions.HTTPError as e:
-            logging.error(f"HTTP error on attempt {attempt + 1}: {e}")
-        except requests.exceptions.ConnectionError as e:
-            logging.error(f"Connection error on attempt {attempt + 1}: {e}")
-        except requests.exceptions.Timeout as e:
-            logging.error(f"Timeout on attempt {attempt + 1}: {e}")
-        except Exception as e:
-            logging.exception(f"Unexpected error on attempt {attempt + 1}: {e}")
+    except requests.exceptions.HTTPError as e:
+        logging.error(f"HTTP error for {city}: {e}")
+        return None
+    except requests.exceptions.ConnectionError as e:
+        logging.error(f"Connection error for {city}: {e}")
+        return None
+    except requests.exceptions.Timeout as e:
+        logging.error(f"Timeout for {city}: {e}")
+        return None
+    except ValueError as e:
+        logging.error(f"JSON decode error for {city}: {e}")
+        return None
+    except Exception as e:
+        logging.exception(f"Unexpected error for {city}: {e}")
+        return None
 
-        if attempt < retries - 1:
-            logging.info(f"Retrying in {backoff} seconds...")
-            time.sleep(backoff)
-        else:
-            logging.critical("All attempts failed.")
-            raise e
-
-    return responses
 
 
 def validate_response(response):
