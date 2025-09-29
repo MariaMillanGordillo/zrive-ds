@@ -384,6 +384,8 @@ def main():
         if response:
             dataframe = process_data(response, city)
             all_dataframes.append(dataframe)
+        else:
+            print(f"Skipping {city} due to no data.")
 
     # Combine all dataframes into one
     if all_dataframes:
