@@ -1,4 +1,3 @@
-import time
 import logging
 import requests
 import pandas as pd
@@ -10,14 +9,14 @@ from retry_requests import retry
 
 # Logging configuration
 logging.basicConfig(
-    level=logging.INFO, # Info level for general information
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO,  # Info level for general information
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 # Setup the Open-Meteo API client with cache and retry on error
-cache_session = requests_cache.CachedSession('.cache', expire_after = -1)
-retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
-openmeteo = openmeteo_requests.Client(session = retry_session)
+cache_session = requests_cache.CachedSession(".cache", expire_after=-1)
+retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
+openmeteo = openmeteo_requests.Client(session=retry_session)
 
 # Variables and functions for the Meteo API module
 API_URL = "https://archive-api.open-meteo.com/v1/archive"
@@ -34,18 +33,17 @@ END_DATE = "2020-12-31"
 
 
 def call_api(
-        city: str, 
-        url: str = API_URL, 
-        params: Optional[dict[str, str]] = None
+    city: str, url: str = API_URL, params: dict[str, str] = None
 ) -> Optional[dict]:
     """
     Call the weather API for a specific city.
     Args:
-        city (str): Name of the city to request data for. 
+        city (str): Name of the city to request data for.
             Example: "Madrid", "London".
-        url (str, optional): API endpoint URL. Defaults to the global constant API_URL. 
-            Normally you should not override this unless you are testing a different API base.
-        params (dict[str, str], optional): Additional query parameters to include in the request. 
+        url (str, optional): API endpoint URL. Defaults to the global constant API_URL.
+            Normally you should not override this unless
+            you are testing a different API base.
+        params (dict[str, str], optional): Parameters to include in the request.
             Common keys include:
                 - "latitude": Latitude of the city (float).
                 - "longitude": Longitude of the city (float).
@@ -55,7 +53,7 @@ def call_api(
                 - "timezone": Timezone for the data (str).
             Defaults to None, meaning only the required parameters will be sent.
     Returns:
-        dict | None: Parsed JSON response from the API as a dictionary, 
+        dict | None: Parsed JSON response from the API as a dictionary,
         or None if the request failed after all retries.
     """
     if not params:
@@ -153,7 +151,8 @@ def process_data(response, city, variables=VARIABLES):
         response (object): Validated API response object.
         city (str): Name of the city the data corresponds to.
         Example: "Madrid", "London".
-        variables (list, optional): List of variable names to extract from the response. Defaults to the global constant VARIABLES.
+        variables (list, optional): List of variable names to extract from the response.
+        Defaults to the global constant VARIABLES.
     Returns:
         pd.DataFrame: DataFrame containing the processed daily weather data.
     """
@@ -178,6 +177,7 @@ def process_data(response, city, variables=VARIABLES):
 
 # Data plotting functions
 
+
 def plot_variable(df, variable, title):
     """
     Plot a specific weather variable for each city with subplots,
@@ -196,7 +196,11 @@ def plot_variable(df, variable, title):
 
     monthly_data = (
         data.groupby(["city", "year", "month"])[variable]
-        .agg("mean" if "temperature" in variable else "sum" if "precipitation" in variable else "max")
+        .agg(
+            "mean"
+            if "temperature" in variable
+            else "sum" if "precipitation" in variable else "max"
+        )
         .reset_index()
     )
 
@@ -209,22 +213,35 @@ def plot_variable(df, variable, title):
         for year in city_data["year"].unique():
             year_data = city_data[city_data["year"] == year]
             ax.plot(
-                year_data["month"],
-                year_data[variable],
-                marker="o",
-                label=str(year)
+                year_data["month"], year_data[variable], marker="o", label=str(year)
             )
 
         ax.set_title(f"{title} in {city}")
-        ax.set_ylabel("°C" if "temperature" in variable else "mm" if "precipitation" in variable else "m/s")
-        ax.legend(title="Year", loc='center left', bbox_to_anchor=(1, 0.5))
+        ax.set_ylabel(
+            "°C"
+            if "temperature" in variable
+            else "mm" if "precipitation" in variable else "m/s"
+        )
+        ax.legend(title="Year", loc="center left", bbox_to_anchor=(1, 0.5))
         ax.grid(True)
 
     axes[-1].set_xlabel("Month")
     axes[-1].set_xticks(range(1, 13))
     axes[-1].set_xticklabels(
-        ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ]
     )
     fig.tight_layout(rect=[0, 0, 0.97, 1])
     plt.show()
@@ -234,11 +251,12 @@ def plot_variable(df, variable, title):
 def plot_per_city(df: pd.DataFrame, variables=VARIABLES):
     """
     Plot all weather variables for each city in a single figure with subplots.
-    
+
     Args:
         df (pd.DataFrame): DataFrame containing the daily data for all cities.
-        variables (list[str], optional): List of variables to plot. Defaults to global VARIABLES.
-    
+        variables (list[str], optional): List of variables to plot.
+        Defaults to global VARIABLES.
+
     Returns:
         fig, axes: Matplotlib figure and list of axes objects.
     """
@@ -266,7 +284,9 @@ def plot_per_city(df: pd.DataFrame, variables=VARIABLES):
 
         for city in cities:
             city_data = df[df["city"] == city].copy()
-            city_data["month"] = city_data["date"].dt.tz_localize(None).dt.to_period("M")
+            city_data["month"] = (
+                city_data["date"].dt.tz_localize(None).dt.to_period("M")
+            )
 
             if agg == "mean":
                 monthly = city_data.groupby("month")[var].mean().reset_index()
@@ -292,11 +312,12 @@ def plot_per_city(df: pd.DataFrame, variables=VARIABLES):
 def plot_all(df, variables=VARIABLES):
     """
     Plot all weather variables using the defined plotting functions.
-    
+
     Args:
         df (pd.DataFrame): DataFrame containing the daily data for all cities.
-        variables (list, optional): List of variable names to plot. Defaults to the global constant VARIABLES.
-    
+        variables (list, optional): List of variable names to plot.
+        Defaults to the global constant VARIABLES.
+
     Returns:
         None
     """
@@ -305,9 +326,11 @@ def plot_all(df, variables=VARIABLES):
         title = (
             "Average Monthly Temperature"
             if "temperature" in variable
-            else "Total Monthly Precipitation"
-            if "precipitation" in variable
-            else "Maximum Monthly Wind Speed"
+            else (
+                "Total Monthly Precipitation"
+                if "precipitation" in variable
+                else "Maximum Monthly Wind Speed"
+            )
         )
         fig, axes = plot_variable(df, variable, title)
         plt.show()
