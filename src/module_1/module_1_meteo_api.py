@@ -180,22 +180,22 @@ def process_data(response, city, variables=VARIABLES):
 # Data plotting functions
 
 
-def plot_temperature(dataframe):
+def plot_temperature(df):
     """
     Plot the average monthly temperature for each city with subplots,
     comparing months across years.
     Args:
-        dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
+        df (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
     """
-    df = dataframe.copy()
-    df["date"] = df["date"].dt.tz_localize(None)
-    df["year"] = df["date"].dt.year
-    df["month"] = df["date"].dt.month
+    data = df.copy()
+    data["date"] = data["date"].dt.tz_localize(None)
+    data["year"] = data["date"].dt.year
+    data["month"] = data["date"].dt.month
 
     monthly_avg = (
-        df.groupby(["city", "year", "month"])["temperature_2m_mean"]
+        data.groupby(["city", "year", "month"])["temperature_2m_mean"]
         .mean()
         .reset_index()
     )
@@ -230,22 +230,22 @@ def plot_temperature(dataframe):
     plt.show()
 
 
-def plot_precipitation(dataframe):
+def plot_precipitation(df):
     """
     Plot the total monthly precipitation for each city with subplots,
     comparing months across years.
     Args:
-        dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
+        df (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
     """
-    df = dataframe.copy()
-    df["date"] = df["date"].dt.tz_localize(None)
-    df["year"] = df["date"].dt.year
-    df["month"] = df["date"].dt.month
+    data = df.copy()
+    data["date"] = data["date"].dt.tz_localize(None)
+    data["year"] = data["date"].dt.year
+    data["month"] = data["date"].dt.month
 
     monthly_total = (
-        df.groupby(["city", "year", "month"])["precipitation_sum"]
+        data.groupby(["city", "year", "month"])["precipitation_sum"]
         .sum()
         .reset_index()
     )
@@ -280,22 +280,22 @@ def plot_precipitation(dataframe):
     plt.show()
 
 
-def plot_wind(dataframe):
+def plot_wind(df):
     """
     Plot the maximum monthly wind speed for each city with subplots,
     comparing months across years.
     Args:
-        dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
+        df (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
     """
-    df = dataframe.copy()
-    df["date"] = df["date"].dt.tz_localize(None)
-    df["year"] = df["date"].dt.year
-    df["month"] = df["date"].dt.month
+    data = df.copy()
+    data["date"] = data["date"].dt.tz_localize(None)
+    data["year"] = data["date"].dt.year
+    data["month"] = data["date"].dt.month
 
     monthly_max = (
-        df.groupby(["city", "year", "month"])["wind_speed_10m_max"]
+        data.groupby(["city", "year", "month"])["wind_speed_10m_max"]
         .max()
         .reset_index()
     )
@@ -330,19 +330,19 @@ def plot_wind(dataframe):
     plt.show()
 
 
-def plot_per_city(dataframe):
+def plot_per_city(df):
     """
     Plot all weather variables for each city in a single figure with subplots.
     Args:
-        dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
+        df (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
     """
     fig, axes = plt.subplots(3, 1, figsize=(12, 7))
-    cities = dataframe["city"].unique()
+    cities = df["city"].unique()
 
     for city in cities:
-        city_data = dataframe[dataframe["city"] == city].copy()
+        city_data = df[df["city"] == city].copy()
         city_data["month"] = city_data["date"].dt.tz_localize(None).dt.to_period("M")
 
         # Temperature
@@ -401,21 +401,18 @@ def plot_per_city(dataframe):
     plt.show()
 
 
-def plot_all(dataframe):
+def plot_all(df):
     """
     Plot all weather variables using the defined plotting functions.
     Args:
-        dataframe (pd.DataFrame): DataFrame containing the daily data for all cities.
+        df (pd.DataFrame): DataFrame containing the daily data for all cities.
     Returns:
         None
     """
-    plot_temperature(dataframe)
-    plot_precipitation(dataframe)
-    plot_wind(dataframe)
-    plot_per_city(dataframe)
-
-
-# MAIN
+    plot_temperature(df)
+    plot_precipitation(df)
+    plot_wind(df)
+    plot_per_city(df)
 
 
 def main():
