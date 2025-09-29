@@ -1,3 +1,4 @@
+import pytest
 from src.module_1.module_1_meteo_api import (
     call_api,
     get_data_meteo_api,
@@ -5,15 +6,16 @@ from src.module_1.module_1_meteo_api import (
     process_data,
 )
 
+# Pre-fetch response for tests
+@pytest.fixture
+def madrid_response():
+    return get_data_meteo_api("Madrid")
+
 
 def test_call_api():
     response = call_api("Madrid")
     assert response is not None, "API call failed, no response returned."
     print("test_call_api passed.")
-
-
-# Pre-fetch response for other tests
-response = get_data_meteo_api("Madrid")
 
 
 def test_get_data_meteo_api(response=response):
