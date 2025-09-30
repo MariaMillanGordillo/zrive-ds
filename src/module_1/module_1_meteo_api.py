@@ -26,6 +26,23 @@ COORDINATES = {
     "Rio": {"latitude": -22.906847, "longitude": -43.172896},
 }
 VARIABLES = ["temperature_2m_mean", "precipitation_sum", "wind_speed_10m_max"]
+VARIABLE_CONFIG = {
+    "temperature_2m_mean": {
+        "title": "Average Monthly Temperature",
+        "operation": "mean",
+        "unit": "°C",
+    },
+    "precipitation_sum": {
+        "title": "Total Monthly Precipitation",
+        "operation": "sum",
+        "unit": "mm",
+    },
+    "wind_speed_10m_max": {
+        "title": "Maximum Monthly Wind Speed",
+        "operation": "max",
+        "unit": "m/s",
+    },
+}
 START_DATE = "2010-01-01"
 END_DATE = "2020-12-31"
 
@@ -195,13 +212,9 @@ def plot_variable(df, variable, title):
     data["month"] = data["date"].dt.month
 
     monthly_data = (
-        data.groupby(["city", "year", "month"])[variable]
-        .agg(
-            "mean"
-            if "temperature" in variable
-            else "sum" if "precipitation" in variable else "max"
-        )
-        .reset_index()
+    data.groupby(["city", "year", "month"])[variable]
+    .agg(VARIABLE_CONFIG.get(variable, {}).get("operation", "max"))
+    .reset_index()
     )
 
     cities = monthly_data["city"].unique()
@@ -217,11 +230,7 @@ def plot_variable(df, variable, title):
             )
 
         ax.set_title(f"{title} in {city}")
-        ax.set_ylabel(
-            "°C"
-            if "temperature" in variable
-            else "mm" if "precipitation" in variable else "m/s"
-        )
+        ax.set_ylabel(VARIABLE_CONFIG.get(variable, {}).get("unit", ""))
         ax.legend(title="Year", loc="center left", bbox_to_anchor=(1, 0.5))
         ax.grid(True)
 
@@ -263,24 +272,15 @@ def plot_per_city(df: pd.DataFrame, variables=VARIABLES):
     n_vars = len(variables)
     fig, axes = plt.subplots(n_vars, 1, figsize=(12, 4 * n_vars))
     if n_vars == 1:
-        axes = [axes]  # para que sea iterable siempre
+        axes = [axes] # iterable always
 
     cities = df["city"].unique()
 
     for i, var in enumerate(variables):
-        # Determinar agregación según tipo de variable
-        if "temperature" in var:
-            agg = "mean"
-            ylabel = "Average Temperature (°C)"
-        elif "precipitation" in var:
-            agg = "sum"
-            ylabel = "Total Precipitation (mm)"
-        elif "wind_speed" in var:
-            agg = "max"
-            ylabel = "Maximum Wind Speed (m/s)"
-        else:
-            agg = "mean"
-            ylabel = var.replace("_", " ").capitalize()
+        config = VARIABLE_CONFIG.get(var, {})
+        agg = config.get("operation", "mean")
+        ylabel = f"{config.get('unit', '')}"
+        title = config.get("title", var.replace("_", " ").capitalize())
 
         for city in cities:
             city_data = df[df["city"] == city].copy()
@@ -288,18 +288,14 @@ def plot_per_city(df: pd.DataFrame, variables=VARIABLES):
                 city_data["date"].dt.tz_localize(None).dt.to_period("M")
             )
 
-            if agg == "mean":
-                monthly = city_data.groupby("month")[var].mean().reset_index()
-            elif agg == "sum":
-                monthly = city_data.groupby("month")[var].sum().reset_index()
-            elif agg == "max":
-                monthly = city_data.groupby("month")[var].max().reset_index()
-
+            # Monthly aggregation based on config
+            monthly = city_data.groupby("month")[var].agg(agg).reset_index()
             monthly["month"] = monthly["month"].dt.to_timestamp()
+
             axes[i].plot(monthly["month"], monthly[var], label=city)
 
-        # Etiquetas y título del subplot
-        axes[i].set_title(var.replace("_", " ").capitalize())
+        # Labels and title for each subplot
+        axes[i].set_title(title)
         axes[i].set_xlabel("Month")
         axes[i].set_ylabel(ylabel)
         axes[i].legend()
@@ -317,21 +313,12 @@ def plot_all(df, variables=VARIABLES):
         df (pd.DataFrame): DataFrame containing the daily data for all cities.
         variables (list, optional): List of variable names to plot.
         Defaults to the global constant VARIABLES.
-
     Returns:
         None
     """
     # Plot each variable individually
     for variable in variables:
-        title = (
-            "Average Monthly Temperature"
-            if "temperature" in variable
-            else (
-                "Total Monthly Precipitation"
-                if "precipitation" in variable
-                else "Maximum Monthly Wind Speed"
-            )
-        )
+        title = VARIABLE_CONFIG.get(variable, {}).get("title", variable)
         fig, axes = plot_variable(df, variable, title)
         plt.show()
 
