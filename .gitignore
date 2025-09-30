@@ -161,3 +161,4 @@ cython_debug/
 
 # Ignore Mac system files
 .DS_Store
+.cache.sqlite
