@@ -93,7 +93,7 @@ def test_get_data_meteo_mock(valid_mock_response):
 
 def test_validate_response_valid(valid_mock_response):
     result = validate_response(valid_mock_response)
-    assert result is None, "Valid response failed validation."
+    assert result is None
 
 
 def test_validate_response_invalid(invalid_mock_response):
@@ -104,7 +104,7 @@ def test_validate_response_invalid(invalid_mock_response):
 def test_process_data(valid_mock_response):
     """process_data should return a valid DataFrame with expected columns."""
     df = process_data(valid_mock_response, "Madrid")
-    assert not df.empty, "DataFrame should not be empty."
+    assert not df.empty
 
     expected_columns = [
         "date",
@@ -118,4 +118,4 @@ def test_process_data(valid_mock_response):
 
     # Check that all columns have the same length
     lengths = [len(df[col]) for col in expected_columns]
-    assert len(set(lengths)) == 1, "All columns must have the same length"
+    assert len(set(lengths)) == 1
