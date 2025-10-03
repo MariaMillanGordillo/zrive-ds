@@ -162,3 +162,9 @@ cython_debug/
 # Ignore Mac system files
 .DS_Store
 .cache.sqlite
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore data files
+data/
