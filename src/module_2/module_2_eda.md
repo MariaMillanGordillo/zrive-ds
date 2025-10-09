@@ -24,12 +24,10 @@ logging.basicConfig(
 
 
 ```python
-# Load environment variables
 load_dotenv()
 AWW_API_KEY = os.getenv("AWW_API_KEY")
 AWW_SECRET = os.getenv("AWW_SECRET")
 
-# Initialize S3 client
 s3 = boto3.client(
     's3',
     aws_access_key_id=AWW_API_KEY,
@@ -37,13 +35,11 @@ s3 = boto3.client(
 )
 bucket_name = 'zrive-ds-data'
 
-# Prefixes to fetch
 prefixes = [
     "groceries/sampled-datasets/",
     "groceries/box_builder_dataset/"
 ]
 
-# Local folder
 PROJECT_ROOT = Path().resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 DATA_DIR.mkdir(exist_ok=True)
@@ -2466,7 +2462,7 @@ plt.show()
     
 
 
-The boxplot shows the distribution of family sizes for each user order sequence of supermarket orders. Early order sequences contain families of various sizes, reflected by wider and lower boxes with many outliers, indicating diverse family sizes. For later order sequences, only smaller families appear, resulting in fewer outliers.
+The boxplot shows that users making their first orders mostly belong to small families (around two members). As users place more orders, the variability in family size increases, suggesting that recurrent customers come from more diverse household sizes.
 
 
 ```python
