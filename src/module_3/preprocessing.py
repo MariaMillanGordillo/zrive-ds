@@ -44,7 +44,6 @@ def prepare_features(df: pd.DataFrame):
         tuple: Scaled train, validation, test sets and targets.
     """
     X = df[[
-        "variant_id",
         "product_type",
         "ordered_before",
         "abandoned_before",
