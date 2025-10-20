@@ -1,3 +1,4 @@
+import pickle
 import logging
 import pandas as pd
 import seaborn as sns
@@ -123,6 +124,7 @@ if __name__ == "__main__":
     PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
     DATA_DIR = PROJECT_ROOT / "data"
     PREPROCESSING_DIR = DATA_DIR / "preprocessing"
+    MODEL_PATH = Path(__file__).resolve().parent / "best_logistic_regression_model.pkl"
 
     df_train_scaled = pd.read_pickle(PREPROCESSING_DIR / "X_train_scaled.pkl")
     df_val_scaled = pd.read_pickle(PREPROCESSING_DIR / "X_val_scaled.pkl")
@@ -135,6 +137,10 @@ if __name__ == "__main__":
     best_model, y_val_pred, results_df = train_logistic_regression(
         df_train_scaled, y_train, df_val_scaled, y_val
     )
+    # Save the best model
+    with open(MODEL_PATH, "wb") as f:
+        pickle.dump(best_model, f)
+    logging.info(f"Best Logistic Regression model saved to {MODEL_PATH}")
 
     fig, ax = plot_roc_pr(y_val, y_val_pred, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_curves.png")
     plt.show()
