@@ -141,9 +141,9 @@ if __name__ == "__main__":
     )
 
     # Plot ROC and PR curves
-    fig, ax = plot_roc_pr(y_val, y_val_pred, model_name="Logistic Regression", save_path= Path(__file__).resolve() / "logreg_curves.png")
+    fig, ax = plot_roc_pr(y_val, y_val_pred, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_curves.png")
     plt.show()
-    
+
     # Plot confusion matrix
-    fig, ax = plot_confusion_matrix(y_val, y_val_pred, threshold=0.5, model_name="Logistic Regression", save_path= Path(__file__).resolve() / "logreg_confusion_matrix.png")
+    fig, ax = plot_confusion_matrix(y_val, y_val_pred, threshold=0.5, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_confusion_matrix.png")
     plt.show()
