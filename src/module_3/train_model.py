@@ -88,13 +88,11 @@ def plot_roc_pr(y_true, y_pred, model_name="Logistic Regression", save_path=None
     """
     Plot ROC and Precision-Recall curves and return fig, ax.
     """
-    # Compute metrics
     fpr, tpr, _ = roc_curve(y_true, y_pred)
     precision, recall, _ = precision_recall_curve(y_true, y_pred)
     auc = roc_auc_score(y_true, y_pred)
     ap = average_precision_score(y_true, y_pred)
 
-    # Create figure and axes
     fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
     # ROC Curve
@@ -126,7 +124,6 @@ if __name__ == "__main__":
     DATA_DIR = PROJECT_ROOT / "data"
     PREPROCESSING_DIR = DATA_DIR / "preprocessing"
 
-    # Load preprocessed and scaled data
     df_train_scaled = pd.read_pickle(PREPROCESSING_DIR / "X_train_scaled.pkl")
     df_val_scaled = pd.read_pickle(PREPROCESSING_DIR / "X_val_scaled.pkl")
     df_test_scaled = pd.read_pickle(PREPROCESSING_DIR / "X_test_scaled.pkl")
@@ -135,16 +132,13 @@ if __name__ == "__main__":
     y_test = pd.read_pickle(PREPROCESSING_DIR / "y_test.pkl")
     logging.info("Loaded preprocessed and scaled datasets.")
 
-    # Train model
     best_model, y_val_pred, results_df = train_logistic_regression(
         df_train_scaled, y_train, df_val_scaled, y_val
     )
 
-    # Plot ROC and PR curves
     fig, ax = plot_roc_pr(y_val, y_val_pred, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_curves.png")
     plt.show()
 
-    # Plot confusion matrix
     fig, ax = plot_confusion_matrix(y_val, y_val_pred, threshold=0.5, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_confusion_matrix.png")
     plt.show()
 
@@ -160,14 +154,12 @@ if __name__ == "__main__":
     logging.info(f"Test Average Precision (AP): {test_ap:.4f}")
     logging.info(f"Test F1 Score: {test_f1:.4f}")
 
-    # Plot ROC and PR curves for Test
     fig, ax = plot_roc_pr(
         y_test, y_test_pred,
         model_name="Logistic Regression - Test",
         save_path=Path(__file__).resolve().parent / "logreg_test_curves.png"
     )
 
-    # Plot confusion matrix for Test
     fig, ax = plot_confusion_matrix(
         y_test, y_test_pred,
         threshold=0.5,

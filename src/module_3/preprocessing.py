@@ -43,7 +43,6 @@ def prepare_features(df: pd.DataFrame):
     Returns:
         tuple: Scaled train, validation, test sets and targets.
     """
-    # Select features and target
     X = df[[
         "variant_id",
         "product_type",
@@ -72,7 +71,6 @@ def prepare_features(df: pd.DataFrame):
     logging.info(f"Validation set size: {X_val.shape[0]} rows")
     logging.info(f"Test set size: {X_test.shape[0]} rows")
 
-    # Scale the features
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_val_scaled = scaler.transform(X_val)
@@ -90,17 +88,13 @@ if __name__ == "__main__":
     logging.info(f"Creating preprocessing directory at {PREPROCESSING_DIR}")
     PREPROCESSING_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Load the CSV
     logging.info(f"Loading data from {FILE_PATH}")
     df = pd.read_csv(FILE_PATH)
 
-    # Filter the dataset
     df_filtered = filter_orders(df)
 
-    # Prepare features and get scaled datasets
     X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test = prepare_features(df_filtered)
 
-    # Save datasets in a loop
     datasets = {
         "X_train_scaled": X_train_scaled,
         "X_val_scaled": X_val_scaled,
@@ -109,7 +103,6 @@ if __name__ == "__main__":
         "y_val": y_val,
         "y_test": y_test
     }
-
     for name, data in datasets.items():
         save_path = PREPROCESSING_DIR / f"{name}.pkl"
         pd.to_pickle(data, save_path)
