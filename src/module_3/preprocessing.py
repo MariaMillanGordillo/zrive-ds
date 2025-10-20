@@ -1,9 +1,8 @@
 import logging
-from pathlib import Path
-
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from pathlib import Path
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 logging.basicConfig(
     level=logging.INFO,
