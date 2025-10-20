@@ -1,8 +1,10 @@
 import logging
 import pandas as pd
+import seaborn as sns
 from pathlib import Path
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix
 from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
@@ -61,40 +63,66 @@ def train_logistic_regression(X_train, y_train, X_val, y_val, C_values=None):
     return best_model, y_val_pred, results_df
 
 
+def plot_confusion_matrix(y_true, y_pred, threshold=0.5, model_name="Model", save_path=None):
+    """
+    Plot confusion matrix for given true and predicted labels and return fig, ax.
+    """
+    y_pred_labels = (y_pred >= threshold).astype(int)
+    cm = confusion_matrix(y_true, y_pred_labels)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False, ax=ax)
+    ax.set_xlabel('Predicted Label')
+    ax.set_ylabel('True Label')
+    ax.set_title(f'Confusion Matrix - {model_name} (Threshold={threshold})')
+
+    if save_path:
+        fig.savefig(save_path)
+        logging.info(f"Confusion matrix saved to {save_path}")
+
+    plt.show()
+    return fig, ax
+
+
 def plot_roc_pr(y_true, y_pred, model_name="Logistic Regression", save_path=None):
     """
-    Plot ROC and Precision-Recall curves.
+    Plot ROC and Precision-Recall curves and return fig, ax.
     """
-    # ROC Curve
+    # Compute metrics
     fpr, tpr, _ = roc_curve(y_true, y_pred)
-    plt.figure(figsize=(12, 5))
+    precision, recall, _ = precision_recall_curve(y_true, y_pred)
+    auc = roc_auc_score(y_true, y_pred)
+    ap = average_precision_score(y_true, y_pred)
 
-    plt.subplot(1, 2, 1)
-    plt.plot(fpr, tpr, label=f'{model_name} (AUC = {roc_auc_score(y_true, y_pred):.3f})')
-    plt.plot([0, 1], [0, 1], 'k--')
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve')
-    plt.legend()
+    # Create figure and axes
+    fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+
+    # ROC Curve
+    ax[0].plot(fpr, tpr, label=f'{model_name} (AUC = {auc:.3f})')
+    ax[0].plot([0, 1], [0, 1], 'k--')
+    ax[0].set_xlabel('False Positive Rate')
+    ax[0].set_ylabel('True Positive Rate')
+    ax[0].set_title('ROC Curve')
+    ax[0].legend()
 
     # Precision-Recall Curve
-    precision, recall, _ = precision_recall_curve(y_true, y_pred)
-    plt.subplot(1, 2, 2)
-    plt.plot(recall, precision, label=f'{model_name} (AP = {average_precision_score(y_true, y_pred):.3f})')
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.title('Precision-Recall Curve')
-    plt.legend()
+    ax[1].plot(recall, precision, label=f'{model_name} (AP = {ap:.3f})')
+    ax[1].set_xlabel('Recall')
+    ax[1].set_ylabel('Precision')
+    ax[1].set_title('Precision-Recall Curve')
+    ax[1].legend()
 
     plt.tight_layout()
     if save_path:
-        plt.savefig(save_path)
+        fig.savefig(save_path)
         logging.info(f"ROC and PR curves saved to {save_path}")
     plt.show()
 
+    return fig, ax
+
 
 if __name__ == "__main__":
-    PROJECT_ROOT = Path().resolve().parent.parent
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
     DATA_DIR = PROJECT_ROOT / "data"
     PREPROCESSING_DIR = DATA_DIR / "preprocessing"
 
@@ -105,6 +133,7 @@ if __name__ == "__main__":
     y_train = pd.read_pickle(PREPROCESSING_DIR / "y_train.pkl")
     y_val = pd.read_pickle(PREPROCESSING_DIR / "y_val.pkl")
     y_test = pd.read_pickle(PREPROCESSING_DIR / "y_test.pkl")
+    logging.info("Loaded preprocessed and scaled datasets.")
 
     # Train model
     best_model, y_val_pred, results_df = train_logistic_regression(
@@ -112,4 +141,9 @@ if __name__ == "__main__":
     )
 
     # Plot ROC and PR curves
-    plot_roc_pr(y_val, y_val_pred, model_name="Logistic Regression", save_path="logreg_curves.png")
+    fig, ax = plot_roc_pr(y_val, y_val_pred, model_name="Logistic Regression", save_path= Path(__file__).resolve() / "logreg_curves.png")
+    plt.show()
+    
+    # Plot confusion matrix
+    fig, ax = plot_confusion_matrix(y_val, y_val_pred, threshold=0.5, model_name="Logistic Regression", save_path= Path(__file__).resolve() / "logreg_confusion_matrix.png")
+    plt.show()

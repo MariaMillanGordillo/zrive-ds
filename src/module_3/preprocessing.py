@@ -82,10 +82,12 @@ def prepare_features(df: pd.DataFrame):
 
 
 if __name__ == "__main__":
-    PROJECT_ROOT = Path().resolve().parent.parent
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
     DATA_DIR = PROJECT_ROOT / "data"
     FILE_PATH = DATA_DIR / "box_builder_dataset" / "feature_frame.csv"
     PREPROCESSING_DIR = DATA_DIR / "preprocessing"
+
+    logging.info(f"Creating preprocessing directory at {PREPROCESSING_DIR}")
     PREPROCESSING_DIR.mkdir(parents=True, exist_ok=True)
 
     # Load the CSV
