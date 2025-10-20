@@ -85,29 +85,6 @@ def load_data(local_file: Path, download_if_missing: bool = True) -> pd.DataFram
         raise
 
 
-def filter_orders(df: pd.DataFrame, min_items: int = 5) -> pd.DataFrame:
-    """
-    Filter DataFrame to include only orders with outcome=1 and at least `min_items` unique variants.
-
-    Args:
-        df (pd.DataFrame): Input DataFrame.
-        min_items (int): Minimum number of unique items per order.
-
-    Returns:
-        pd.DataFrame: Filtered DataFrame.
-    """
-    qualifying_orders = (
-        df[df["outcome"] == 1]
-        .groupby("order_id")["variant_id"]
-        .nunique()
-        .loc[lambda x: x >= min_items]
-        .index
-    )
-    filtered_df = df[df["order_id"].isin(qualifying_orders)]
-    logging.info(f"Filtered data to {filtered_df.shape[0]} rows across {filtered_df['order_id'].nunique()} orders")
-    return filtered_df
-
-
 if __name__ == "__main__":
     PROJECT_ROOT = Path().resolve().parent.parent
     DATA_DIR = PROJECT_ROOT / "data"
@@ -115,4 +92,3 @@ if __name__ == "__main__":
     FILE_PATH = DATA_DIR / "box_builder_dataset" / "feature_frame.csv"
 
     df = load_data(FILE_PATH)
-    df_filtered = filter_orders(df)
