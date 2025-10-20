@@ -85,8 +85,11 @@ if __name__ == "__main__":
     PROJECT_ROOT = Path().resolve().parent.parent
     DATA_DIR = PROJECT_ROOT / "data"
     FILE_PATH = DATA_DIR / "box_builder_dataset" / "feature_frame.csv"
+    PREPROCESSING_DIR = DATA_DIR / "preprocessing"
+    PREPROCESSING_DIR.mkdir(parents=True, exist_ok=True)
 
     # Load the CSV
+    logging.info(f"Loading data from {FILE_PATH}")
     df = pd.read_csv(FILE_PATH)
 
     # Filter the dataset
@@ -94,3 +97,21 @@ if __name__ == "__main__":
 
     # Prepare features and get scaled datasets
     X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test = prepare_features(df_filtered)
+
+    # Save datasets in a loop
+    datasets = {
+        "X_train_scaled": X_train_scaled,
+        "X_val_scaled": X_val_scaled,
+        "X_test_scaled": X_test_scaled,
+        "y_train": y_train,
+        "y_val": y_val,
+        "y_test": y_test
+    }
+
+    for name, data in datasets.items():
+        save_path = PREPROCESSING_DIR / f"{name}.pkl"
+        pd.to_pickle(data, save_path)
+        logging.info(f"Saved {name} to {save_path}")
+
+    logging.info("Preprocessed and scaled datasets successfully saved.")
+
