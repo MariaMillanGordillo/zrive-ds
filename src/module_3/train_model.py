@@ -147,3 +147,30 @@ if __name__ == "__main__":
     # Plot confusion matrix
     fig, ax = plot_confusion_matrix(y_val, y_val_pred, threshold=0.5, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_confusion_matrix.png")
     plt.show()
+
+    
+    # Evaluate on Test Set
+    y_test_pred = best_model.predict_proba(df_test_scaled)[:, 1]
+
+    test_auc = roc_auc_score(y_test, y_test_pred)
+    test_ap = average_precision_score(y_test, y_test_pred)
+    test_f1 = f1_score(y_test, y_test_pred.round())
+
+    logging.info(f"Test AUC: {test_auc:.4f}")
+    logging.info(f"Test Average Precision (AP): {test_ap:.4f}")
+    logging.info(f"Test F1 Score: {test_f1:.4f}")
+
+    # Plot ROC and PR curves for Test
+    fig, ax = plot_roc_pr(
+        y_test, y_test_pred,
+        model_name="Logistic Regression - Test",
+        save_path=Path(__file__).resolve().parent / "logreg_test_curves.png"
+    )
+
+    # Plot confusion matrix for Test
+    fig, ax = plot_confusion_matrix(
+        y_test, y_test_pred,
+        threshold=0.5,
+        model_name="Logistic Regression - Test",
+        save_path=Path(__file__).resolve().parent / "logreg_test_confusion_matrix.png"
+    )
