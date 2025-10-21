@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 import seaborn as sns
 from pathlib import Path
+from datetime import datetime
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
@@ -138,9 +139,15 @@ if __name__ == "__main__":
         df_train_scaled, y_train, df_val_scaled, y_val
     )
     # Save the best model
-    with open(MODEL_PATH, "wb") as f:
+    models_dir = Path(__file__).resolve().parent / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    model_file = models_dir / f"best_logistic_regression_model_{timestamp}.pkl"
+
+    with open(model_file, "wb") as f:
         pickle.dump(best_model, f)
-    logging.info(f"Best Logistic Regression model saved to {MODEL_PATH}")
+    logging.info(f"Best Logistic Regression model saved to {model_file}")
 
     fig, ax = plot_roc_pr(y_val, y_val_pred, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_curves.png")
     plt.show()
@@ -148,7 +155,7 @@ if __name__ == "__main__":
     fig, ax = plot_confusion_matrix(y_val, y_val_pred, threshold=0.5, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_confusion_matrix.png")
     plt.show()
 
-    
+
     # Evaluate on Test Set
     y_test_pred = best_model.predict_proba(df_test_scaled)[:, 1]
 
