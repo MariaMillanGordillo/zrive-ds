@@ -71,7 +71,7 @@ def load_data(local_file: Path, download_if_missing: bool = True) -> pd.DataFram
         logging.info(f"{local_file} not found locally. Downloading from S3...")
         bucket_name = "zrive-ds-data"
         prefix = "groceries/box_builder_dataset/"
-        download_s3_folder(bucket_name, prefix, local_file.parent.parent)  # download into 'data/'
+        download_s3_folder(bucket_name, prefix, local_file.parent.parent)
 
     try:
         df = pd.read_csv(local_file)

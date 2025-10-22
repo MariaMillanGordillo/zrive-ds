@@ -23,7 +23,8 @@ logging.basicConfig(
 
 def train_logistic_regression(X_train, y_train, X_val, y_val, C_values=None):
     """
-    Train Logistic Regression models with different C values and select the best based on AP.
+    Train Logistic Regression models with different C values
+    and select the best based on AP.
 
     Returns:
         tuple: best_model, validation_predictions, results_df
@@ -44,7 +45,11 @@ def train_logistic_regression(X_train, y_train, X_val, y_val, C_values=None):
             "ap": average_precision_score(y_val, y_pred)
         })
 
-    results_df = pd.DataFrame(results).sort_values("ap", ascending=False).reset_index(drop=True)
+    results_df = (
+        pd.DataFrame(results)
+        .sort_values("ap", ascending=False)
+        .reset_index(drop=True)
+    )
     logging.info(f"Logistic tuning results (sorted by AP):\n{results_df}")
 
     best_C = results_df.loc[0, "C"]
@@ -65,7 +70,11 @@ def train_logistic_regression(X_train, y_train, X_val, y_val, C_values=None):
     return best_model, y_val_pred, results_df
 
 
-def plot_confusion_matrix(y_true, y_pred, threshold=0.5, model_name="Model", save_path=None):
+def plot_confusion_matrix(y_true,
+                          y_pred,
+                          threshold=0.5,
+                          model_name="Model",
+                          save_path=None):
     """
     Plot confusion matrix for given true and predicted labels and return fig, ax.
     """
@@ -149,12 +158,20 @@ if __name__ == "__main__":
         pickle.dump(best_model, f)
     logging.info(f"Best Logistic Regression model saved to {model_file}")
 
-    fig, ax = plot_roc_pr(y_val, y_val_pred, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_curves.png")
+    fig, ax = plot_roc_pr(
+            y_val,
+            y_val_pred,
+            model_name="Logistic Regression",
+            save_path=Path(__file__).resolve().parent / "logreg_curves.png")
     plt.show()
 
-    fig, ax = plot_confusion_matrix(y_val, y_val_pred, threshold=0.5, model_name="Logistic Regression", save_path= Path(__file__).resolve().parent / "logreg_confusion_matrix.png")
+    fig, ax = plot_confusion_matrix(
+            y_val,
+            y_val_pred,
+            threshold=0.5,
+            model_name="Logistic Regression",
+            save_path=Path(__file__).resolve().parent / "logreg_confusion_matrix.png")
     plt.show()
-
 
     # Evaluate on Test Set
     y_test_pred = best_model.predict_proba(df_test_scaled)[:, 1]

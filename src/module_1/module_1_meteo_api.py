@@ -212,9 +212,9 @@ def plot_variable(df, variable, title):
     data["month"] = data["date"].dt.month
 
     monthly_data = (
-    data.groupby(["city", "year", "month"])[variable]
-    .agg(VARIABLE_CONFIG.get(variable, {}).get("operation", "max"))
-    .reset_index()
+        data.groupby(["city", "year", "month"])[variable]
+        .agg(VARIABLE_CONFIG.get(variable, {}).get("operation", "max"))
+        .reset_index()
     )
 
     cities = monthly_data["city"].unique()
@@ -272,7 +272,7 @@ def plot_per_city(df: pd.DataFrame, variables=VARIABLES):
     n_vars = len(variables)
     fig, axes = plt.subplots(n_vars, 1, figsize=(12, 4 * n_vars))
     if n_vars == 1:
-        axes = [axes] # iterable always
+        axes = [axes]  # iterable always
 
     cities = df["city"].unique()
 

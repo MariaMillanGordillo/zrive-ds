@@ -12,7 +12,8 @@ logging.basicConfig(
 
 def filter_orders(df: pd.DataFrame, min_items: int = 5) -> pd.DataFrame:
     """
-    Filter DataFrame to include only orders with outcome=1 and at least `min_items` unique variants.
+    Filter DataFrame to include only orders with outcome=1
+    and at least `min_items` unique variants.
 
     Args:
         df (pd.DataFrame): Input DataFrame.
@@ -29,17 +30,19 @@ def filter_orders(df: pd.DataFrame, min_items: int = 5) -> pd.DataFrame:
         .index
     )
     filtered_df = df[df["order_id"].isin(qualifying_orders)]
-    logging.info(f"Filtered data to {filtered_df.shape[0]} rows across {filtered_df['order_id'].nunique()} orders")
+    logging.info(f"""Filtered data to {filtered_df.shape[0]}
+                 rows across {filtered_df['order_id'].nunique()} orders""")
     return filtered_df
 
+
 def temporal_split_by_order(
-    df, 
-    date_col, 
-    order_col="order_id", 
+    df,
+    date_col,
+    order_col="order_id",
     feature_cols=None,
-    target_col="outcome", 
-    train_size=0.7, 
-    val_size=0.2, 
+    target_col="outcome",
+    train_size=0.7,
+    val_size=0.2,
     test_size=0.1
 ):
     """
@@ -88,7 +91,9 @@ def temporal_split_by_order(
     logging.info(f"Train orders: {len(train_orders)} ({train_size*100:.1f}%)")
     logging.info(f"Val orders: {len(val_orders)} ({val_size*100:.1f}%)")
     logging.info(f"Test orders: {len(test_orders)} ({test_size*100:.1f}%)")
-    logging.info(f"Train rows: {train_df.shape[0]}, Val rows: {val_df.shape[0]}, Test rows: {test_df.shape[0]}")
+    logging.info(f"""Train rows: {train_df.shape[0]},
+                 Val rows: {val_df.shape[0]},
+                 Test rows: {test_df.shape[0]}""")
 
     return X_train, X_val, X_test, y_train, y_val, y_test
 
@@ -107,7 +112,12 @@ if __name__ == "__main__":
 
     df_filtered = filter_orders(df, min_items=5)
 
-    feature_cols = ["product_type", "ordered_before", "abandoned_before", "active_snoozed", "set_as_regular", "global_popularity"]
+    feature_cols = ["product_type",
+                    "ordered_before",
+                    "abandoned_before",
+                    "active_snoozed",
+                    "set_as_regular",
+                    "global_popularity"]
     X_train, X_val, X_test, y_train, y_val, y_test = temporal_split_by_order(
         df_filtered,
         date_col="order_date",
@@ -119,7 +129,9 @@ if __name__ == "__main__":
     pipeline = make_pipeline(
         FunctionTransformer(
             lambda X: X.assign(
-                product_type=X['product_type'].map(X['product_type'].value_counts(normalize=True))
+                product_type=(X['product_type']
+                              .map(X['product_type']
+                                   .value_counts(normalize=True)))
             )
         ),
         StandardScaler()
