@@ -22,6 +22,7 @@ fastparquet = "^2024.11.0"
 seaborn = "^0.13.2"
 nbconvert = "^7.16.6"
 jupyter = "^1.1.1"
+imblearn = "^0.0"
 
 
 [build-system]
