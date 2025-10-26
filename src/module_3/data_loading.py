@@ -1,8 +1,9 @@
-import os
-import boto3
 import logging
-import pandas as pd
+import os
 from pathlib import Path
+
+import boto3
+import pandas as pd
 from dotenv import load_dotenv
 
 logging.basicConfig(

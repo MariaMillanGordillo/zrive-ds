@@ -1,11 +1,10 @@
-import pytest
-import pandas as pd
 from unittest.mock import patch
-from src.module_3.train_model import (
-    train_logistic_regression,
-    plot_confusion_matrix,
-    plot_roc_pr,
-)
+
+import pandas as pd
+import pytest
+
+from src.module_3.train_model import (plot_confusion_matrix, plot_roc_pr,
+                                      train_logistic_regression)
 
 
 @pytest.fixture

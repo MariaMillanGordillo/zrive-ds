@@ -1,6 +1,8 @@
-import pytest
-import pandas as pd
 from unittest.mock import Mock, patch
+
+import pandas as pd
+import pytest
+
 from src.module_3.data_loading import download_s3_folder, load_data
 
 

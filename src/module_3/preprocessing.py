@@ -1,6 +1,7 @@
 import logging
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 

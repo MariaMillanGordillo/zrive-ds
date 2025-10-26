@@ -1,10 +1,11 @@
 import logging
-import requests
-import pandas as pd
-import requests_cache
-import openmeteo_requests
 from typing import Optional
+
 import matplotlib.pyplot as plt
+import openmeteo_requests
+import pandas as pd
+import requests
+import requests_cache
 from retry_requests import retry
 
 # Logging configuration

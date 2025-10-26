@@ -1,19 +1,15 @@
-import pickle
 import logging
+import pickle
+from datetime import datetime
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from pathlib import Path
-from datetime import datetime
-import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import (
-    roc_auc_score,
-    average_precision_score,
-    roc_curve,
-    precision_recall_curve,
-    f1_score
-)
+from sklearn.metrics import (average_precision_score, confusion_matrix,
+                             f1_score, precision_recall_curve, roc_auc_score,
+                             roc_curve)
 
 logging.basicConfig(
     level=logging.INFO,

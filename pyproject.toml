@@ -27,6 +27,9 @@ imblearn = "^0.0"
 urllib3 = "^2.5.0"
 
 
+[tool.poetry.group.dev.dependencies]
+isort = "^7.0.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
