@@ -123,11 +123,54 @@ def plot_roc_pr(y_true, y_pred, model_name="Logistic Regression", save_path=None
     return fig, ax
 
 
+def evaluate_model(y_true, y_pred, model_name="Model", output_dir=None, threshold=0.5):
+    """
+    Evaluate a model by computing metrics, logging, and saving plots.
+    
+    Args:
+        y_true (array-like): True labels
+        y_pred (array-like): Predicted probabilities
+        model_name (str): Name of the model (for logging and plot titles)
+        output_dir (Path or str, optional): Directory to save plots
+        threshold (float): Threshold to binarize probabilities for confusion matrix
+    
+    Returns:
+        dict: Dictionary with AUC, AP, F1 score
+    """
+    auc = roc_auc_score(y_true, y_pred)
+    ap = average_precision_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred.round())
+
+    logging.info(f"{model_name} - AUC: {auc:.4f}")
+    logging.info(f"{model_name} - Average Precision (AP): {ap:.4f}")
+    logging.info(f"{model_name} - F1 Score: {f1:.4f}")
+
+    output_dir = Path(output_dir) if output_dir else Path(__file__).resolve().parent
+
+    # ROC + PR curves
+    fig, ax = plot_roc_pr(
+        y_true, y_pred,
+        model_name=model_name,
+        save_path=output_dir / f"{model_name.replace(' ', '_').lower()}_curves.png"
+    )
+
+    # Confusion matrix
+    fig, ax = plot_confusion_matrix(
+        y_true, y_pred,
+        threshold=threshold,
+        model_name=model_name,
+        save_path=output_dir / f"{model_name.replace(' ', '_').lower()}_confusion_matrix.png"
+    )
+
+    return {"auc": auc, "ap": ap, "f1": f1}
+
+
 if __name__ == "__main__":
     PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
     DATA_DIR = PROJECT_ROOT / "data"
     PREPROCESSING_DIR = DATA_DIR / "preprocessing"
-    MODEL_PATH = Path(__file__).resolve().parent / "best_logistic_regression_model.pkl"
+    MODELS_DIR = Path(__file__).resolve().parent / "models"
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
     df_train_scaled = pd.read_pickle(PREPROCESSING_DIR / "X_train_scaled.pkl")
     df_val_scaled = pd.read_pickle(PREPROCESSING_DIR / "X_val_scaled.pkl")
@@ -140,52 +183,26 @@ if __name__ == "__main__":
     best_model, y_val_pred, results_df = train_logistic_regression(
         df_train_scaled, y_train, df_val_scaled, y_val
     )
-    # Save the best model
-    models_dir = Path(__file__).resolve().parent / "models"
-    models_dir.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    model_file = models_dir / f"best_logistic_regression_model_{timestamp}.pkl"
-
+    model_file = MODELS_DIR / f"best_logistic_regression_model_{timestamp}.pkl"
     with open(model_file, "wb") as f:
         pickle.dump(best_model, f)
     logging.info(f"Best Logistic Regression model saved to {model_file}")
 
-    fig, ax = plot_roc_pr(
-            y_val,
-            y_val_pred,
-            model_name="Logistic Regression",
-            save_path=Path(__file__).resolve().parent / "logreg_curves.png")
-    plt.close()
-
-    fig, ax = plot_confusion_matrix(
-            y_val,
-            y_val_pred,
-            threshold=0.5,
-            model_name="Logistic Regression",
-            save_path=Path(__file__).resolve().parent / "logreg_confusion_matrix.png")
-    plt.close()
-
-    # Evaluate on Test Set
-    y_test_pred = best_model.predict_proba(df_test_scaled)[:, 1]
-
-    test_auc = roc_auc_score(y_test, y_test_pred)
-    test_ap = average_precision_score(y_test, y_test_pred)
-    test_f1 = f1_score(y_test, y_test_pred.round())
-
-    logging.info(f"Test AUC: {test_auc:.4f}")
-    logging.info(f"Test Average Precision (AP): {test_ap:.4f}")
-    logging.info(f"Test F1 Score: {test_f1:.4f}")
-
-    fig, ax = plot_roc_pr(
-        y_test, y_test_pred,
-        model_name="Logistic Regression - Test",
-        save_path=Path(__file__).resolve().parent / "logreg_test_curves.png"
+    # Validation evaluation
+    val_metrics = evaluate_model(
+        y_true=y_val,
+        y_pred=y_val_pred,
+        model_name="Logistic Regression - Validation",
+        output_dir=Path(__file__).resolve().parent
     )
 
-    fig, ax = plot_confusion_matrix(
-        y_test, y_test_pred,
-        threshold=0.5,
+    # Predict and evaluate on test set
+    y_test_pred = best_model.predict_proba(df_test_scaled)[:, 1]
+    test_metrics = evaluate_model(
+        y_true=y_test,
+        y_pred=y_test_pred,
         model_name="Logistic Regression - Test",
-        save_path=Path(__file__).resolve().parent / "logreg_test_confusion_matrix.png"
+        output_dir=Path(__file__).resolve().parent
     )
