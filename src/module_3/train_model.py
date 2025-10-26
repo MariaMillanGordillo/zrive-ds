@@ -2,14 +2,20 @@ import logging
 import pickle
 from datetime import datetime
 from pathlib import Path
+from typing import Tuple, Dict, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (average_precision_score, confusion_matrix,
-                             f1_score, precision_recall_curve, roc_auc_score,
-                             roc_curve)
+from sklearn.metrics import (
+    average_precision_score,
+    confusion_matrix,
+    f1_score,
+    precision_recall_curve,
+    roc_auc_score,
+    roc_curve
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,13 +23,19 @@ logging.basicConfig(
 )
 
 
-def train_logistic_regression(X_train, y_train, X_val, y_val, C_values=[0.001, 0.01, 0.1, 1, 10, 100]):
+def train_logistic_regression(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_val: pd.DataFrame,
+    y_val: pd.Series,
+    C_values: list[float] = [0.001, 0.01, 0.1, 1, 10, 100]
+) -> Tuple[LogisticRegression, pd.Series, pd.DataFrame]:
     """
     Train Logistic Regression models with different C values
     and select the best based on AP.
 
     Returns:
-        tuple: best_model, validation_predictions, results_df
+        Tuple[LogisticRegression, pd.Series, pd.DataFrame]: best_model, validation_predictions, results_df
     """
     results = []
 
@@ -63,11 +75,13 @@ def train_logistic_regression(X_train, y_train, X_val, y_val, C_values=[0.001, 0
     return best_model, y_val_pred, results_df
 
 
-def plot_confusion_matrix(y_true,
-                          y_pred,
-                          threshold=0.5,
-                          model_name="Model",
-                          save_path=None):
+def plot_confusion_matrix(
+    y_true: pd.Series,
+    y_pred: pd.Series,
+    threshold: float = 0.5,
+    model_name: str = "Model",
+    save_path: Optional[Path] = None
+) -> Tuple[plt.Figure, plt.Axes]:
     """
     Plot confusion matrix for given true and predicted labels and return fig, ax.
     """
@@ -84,11 +98,16 @@ def plot_confusion_matrix(y_true,
         fig.savefig(save_path)
         logging.info(f"Confusion matrix saved to {save_path}")
 
-    plt.close()
+    plt.close(fig)
     return fig, ax
 
 
-def plot_roc_pr(y_true, y_pred, model_name="Logistic Regression", save_path=None):
+def plot_roc_pr(
+    y_true: pd.Series,
+    y_pred: pd.Series,
+    model_name: str = "Logistic Regression",
+    save_path: Optional[Path] = None
+) -> Tuple[plt.Figure, plt.Axes]:
     """
     Plot ROC and Precision-Recall curves and return fig, ax.
     """
@@ -118,21 +137,27 @@ def plot_roc_pr(y_true, y_pred, model_name="Logistic Regression", save_path=None
     if save_path:
         fig.savefig(save_path)
         logging.info(f"ROC and PR curves saved to {save_path}")
-    plt.close()
+    plt.close(fig)
 
     return fig, ax
 
 
-def evaluate_model(y_true, y_pred, model_name="Model", output_dir=None, threshold=0.5):
+def evaluate_model(
+    y_true: pd.Series,
+    y_pred: pd.Series,
+    model_name: str = "Model",
+    output_dir: Optional[Path] = None,
+    threshold: float = 0.5
+) -> Dict[str, float]:
     """
     Evaluate a model by computing metrics, logging, and saving plots.
     
     Args:
-        y_true (array-like): True labels
-        y_pred (array-like): Predicted probabilities
-        model_name (str): Name of the model (for logging and plot titles)
-        output_dir (Path or str, optional): Directory to save plots
-        threshold (float): Threshold to binarize probabilities for confusion matrix
+        y_true: True labels
+        y_pred: Predicted probabilities
+        model_name: Name of the model (for logging and plot titles)
+        output_dir: Directory to save plots
+        threshold: Threshold to binarize probabilities for confusion matrix
     
     Returns:
         dict: Dictionary with AUC, AP, F1 score
@@ -148,14 +173,14 @@ def evaluate_model(y_true, y_pred, model_name="Model", output_dir=None, threshol
     output_dir = Path(output_dir) if output_dir else Path(__file__).resolve().parent
 
     # ROC + PR curves
-    fig, ax = plot_roc_pr(
+    plot_roc_pr(
         y_true, y_pred,
         model_name=model_name,
         save_path=output_dir / f"{model_name.replace(' ', '_').lower()}_curves.png"
     )
 
     # Confusion matrix
-    fig, ax = plot_confusion_matrix(
+    plot_confusion_matrix(
         y_true, y_pred,
         threshold=threshold,
         model_name=model_name,

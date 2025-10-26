@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Optional
 
 import boto3
 import pandas as pd
@@ -12,8 +13,8 @@ logging.basicConfig(
 )
 
 load_dotenv()
-AWS_ACCESS_KEY = os.getenv("AWW_API_KEY")
-AWS_SECRET_KEY = os.getenv("AWW_SECRET")
+AWS_ACCESS_KEY: Optional[str] = os.getenv("AWW_API_KEY")
+AWS_SECRET_KEY: Optional[str] = os.getenv("AWW_SECRET")
 
 
 def download_s3_folder(bucket_name: str, prefix: str, local_dir: Path) -> None:
@@ -32,18 +33,18 @@ def download_s3_folder(bucket_name: str, prefix: str, local_dir: Path) -> None:
     )
 
     try:
-        response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+        response: dict = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
         if "Contents" not in response:
             logging.warning(f"No files found in {bucket_name}/{prefix}")
             return
 
         for obj in response["Contents"]:
-            file_key = obj["Key"]
+            file_key: str = obj["Key"]
             if file_key.endswith("/"):
                 continue  # skip folders
 
-            relative_path = Path(*file_key.split("/")[1:])
-            local_path = local_dir / relative_path
+            relative_path: Path = Path(*file_key.split("/")[1:])
+            local_path: Path = local_dir / relative_path
             local_path.parent.mkdir(parents=True, exist_ok=True)
 
             if local_path.exists():
@@ -70,12 +71,12 @@ def load_data(local_file: Path, download_if_missing: bool = True) -> pd.DataFram
     """
     if not local_file.exists() and download_if_missing:
         logging.info(f"{local_file} not found locally. Downloading from S3...")
-        bucket_name = "zrive-ds-data"
-        prefix = "groceries/box_builder_dataset/"
+        bucket_name: str = "zrive-ds-data"
+        prefix: str = "groceries/box_builder_dataset/"
         download_s3_folder(bucket_name, prefix, local_file.parent.parent)
 
     try:
-        df = pd.read_csv(local_file)
+        df: pd.DataFrame = pd.read_csv(local_file)
         logging.info(f"Loaded data with shape {df.shape}")
         return df
     except FileNotFoundError:
@@ -87,9 +88,9 @@ def load_data(local_file: Path, download_if_missing: bool = True) -> pd.DataFram
 
 
 if __name__ == "__main__":
-    PROJECT_ROOT = Path().resolve().parent.parent
-    DATA_DIR = PROJECT_ROOT / "data"
+    PROJECT_ROOT: Path = Path().resolve().parent.parent
+    DATA_DIR: Path = PROJECT_ROOT / "data"
     DATA_DIR.mkdir(exist_ok=True)
-    FILE_PATH = DATA_DIR / "box_builder_dataset" / "feature_frame.csv"
+    FILE_PATH: Path = DATA_DIR / "box_builder_dataset" / "feature_frame.csv"
 
-    df = load_data(FILE_PATH)
+    df: pd.DataFrame = load_data(FILE_PATH)
