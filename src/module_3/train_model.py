@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 
-def train_logistic_regression(X_train, y_train, X_val, y_val, C_values=None):
+def train_logistic_regression(X_train, y_train, X_val, y_val, C_values=[0.001, 0.01, 0.1, 1, 10, 100]):
     """
     Train Logistic Regression models with different C values
     and select the best based on AP.
@@ -25,9 +25,6 @@ def train_logistic_regression(X_train, y_train, X_val, y_val, C_values=None):
     Returns:
         tuple: best_model, validation_predictions, results_df
     """
-    if C_values is None:
-        C_values = [0.001, 0.01, 0.1, 1, 10, 100]
-
     results = []
 
     for C in C_values:
