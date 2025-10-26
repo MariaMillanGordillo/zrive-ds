@@ -84,7 +84,7 @@ def plot_confusion_matrix(y_true,
         fig.savefig(save_path)
         logging.info(f"Confusion matrix saved to {save_path}")
 
-    plt.show()
+    plt.close()
     return fig, ax
 
 
@@ -118,7 +118,7 @@ def plot_roc_pr(y_true, y_pred, model_name="Logistic Regression", save_path=None
     if save_path:
         fig.savefig(save_path)
         logging.info(f"ROC and PR curves saved to {save_path}")
-    plt.show()
+    plt.close()
 
     return fig, ax
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
             y_val_pred,
             model_name="Logistic Regression",
             save_path=Path(__file__).resolve().parent / "logreg_curves.png")
-    plt.show()
+    plt.close()
 
     fig, ax = plot_confusion_matrix(
             y_val,
@@ -164,7 +164,7 @@ if __name__ == "__main__":
             threshold=0.5,
             model_name="Logistic Regression",
             save_path=Path(__file__).resolve().parent / "logreg_confusion_matrix.png")
-    plt.show()
+    plt.close()
 
     # Evaluate on Test Set
     y_test_pred = best_model.predict_proba(df_test_scaled)[:, 1]
