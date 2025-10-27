@@ -22,7 +22,7 @@ logging.basicConfig(
 
 def train_model(event):
     """
-    Train Gradient Boosting model using SMOTE and save it to disk.
+    Train Gradient Boosting model using SMOTE and save pipeline + model to disk.
     """
     model_params = event.get("model_parametrisation", {})
     logging.info(f"Training with parameters: {model_params}")
@@ -81,7 +81,6 @@ def train_model(event):
     model.fit(X_train_res, y_train_res)
     logging.info("Model training completed.")
 
-    # Evaluation
     y_pred_val = model.predict(X_val_scaled)
     report = classification_report(y_val, y_pred_val)
     logging.info("Validation Report:\n" + report)
@@ -92,15 +91,19 @@ def train_model(event):
     model_dir.mkdir(parents=True, exist_ok=True)
     model_path = model_dir / model_name
 
-    joblib.dump(model, model_path)
-    logging.info(f"Model saved at {model_path}")
+    # Save as dict pipeline + model
+    to_save = {
+        "pipeline": pipeline,
+        "model": model
+    }
+    joblib.dump(to_save, model_path)
+    logging.info(f"Pipeline and model saved in {model_path}")
 
     return {
         "model_name": model_name,
         "model_path": str(model_path),
         "validation_report": report
     }
-
 
 def handler_fit(event, _):
     """
@@ -121,7 +124,6 @@ def handler_fit(event, _):
             "statusCode": 500,
             "body": json.dumps({"error": str(e)})
         }
-
 
 if __name__ == "__main__":
     test_event = {"model_parametrisation": {"n_estimators": 200, "max_depth": 3}}
