@@ -1,16 +1,16 @@
-import os
 import json
-import joblib
 import logging
-import pandas as pd
+import os
 from datetime import datetime
 from pathlib import Path
 
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import FunctionTransformer, StandardScaler
+import joblib
+import pandas as pd
 from imblearn.over_sampling import SMOTE
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import classification_report
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import FunctionTransformer, StandardScaler
 
 from src.module_3.data_loading import load_data
 from src.module_3.preprocessing import filter_orders, temporal_split_by_order

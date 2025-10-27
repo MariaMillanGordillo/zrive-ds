@@ -1,9 +1,11 @@
 import json
+import logging
+from datetime import datetime
+from pathlib import Path
+
 import joblib
 import pandas as pd
-from pathlib import Path
-from datetime import datetime
-import logging
+
 from src.module_4.fit import product_type_transform
 
 logging.basicConfig(

@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
+import numpy as np
 import pandas as pd
 import pytest
-import numpy as np
 
 from src.module_3.train_model import (plot_confusion_matrix, plot_roc_pr,
                                       train_logistic_regression)
