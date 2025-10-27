@@ -22,7 +22,13 @@ fastparquet = "^2024.11.0"
 seaborn = "^0.13.2"
 nbconvert = "^7.16.6"
 jupyter = "^1.1.1"
+pytest = "^8.4.2"
+imblearn = "^0.0"
+urllib3 = "^2.5.0"
 
+
+[tool.poetry.group.dev.dependencies]
+isort = "^7.0.0"
 
 [build-system]
 requires = ["poetry-core"]

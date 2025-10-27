@@ -1,12 +1,10 @@
-import pytest
 from unittest.mock import Mock, patch
-from src.module_1.module_1_meteo_api import (
-    call_api,
-    get_data_meteo_api,
-    validate_response,
-    process_data,
-    VARIABLES,
-)
+
+import pytest
+
+from src.module_1.module_1_meteo_api import (VARIABLES, call_api,
+                                             get_data_meteo_api, process_data,
+                                             validate_response)
 
 
 # Fixed valid response for testing
