@@ -8,13 +8,17 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (average_precision_score, confusion_matrix,
-                             f1_score, precision_recall_curve, roc_auc_score,
-                             roc_curve)
+from sklearn.metrics import (
+    average_precision_score,
+    confusion_matrix,
+    f1_score,
+    precision_recall_curve,
+    roc_auc_score,
+    roc_curve,
+)
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
@@ -23,7 +27,7 @@ def train_logistic_regression(
     y_train: pd.Series,
     X_val: pd.DataFrame,
     y_val: pd.Series,
-    C_values: list[float] = [0.001, 0.01, 0.1, 1, 10, 100]
+    C_values: list[float] = [0.001, 0.01, 0.1, 1, 10, 100],
 ) -> Tuple[LogisticRegression, pd.Series, pd.DataFrame]:
     """
     Train Logistic Regression models with different C values
@@ -35,27 +39,27 @@ def train_logistic_regression(
     results = []
 
     for C in C_values:
-        model = LogisticRegression(C=C, max_iter=1000, class_weight='balanced')
+        model = LogisticRegression(C=C, max_iter=1000, class_weight="balanced")
         model.fit(X_train, y_train)
         y_pred = model.predict_proba(X_val)[:, 1]
 
-        results.append({
-            "C": C,
-            "auc": roc_auc_score(y_val, y_pred),
-            "ap": average_precision_score(y_val, y_pred)
-        })
+        results.append(
+            {
+                "C": C,
+                "auc": roc_auc_score(y_val, y_pred),
+                "ap": average_precision_score(y_val, y_pred),
+            }
+        )
 
     results_df = (
-        pd.DataFrame(results)
-        .sort_values("ap", ascending=False)
-        .reset_index(drop=True)
+        pd.DataFrame(results).sort_values("ap", ascending=False).reset_index(drop=True)
     )
     logging.info(f"Logistic tuning results (sorted by AP):\n{results_df}")
 
     best_C = results_df.loc[0, "C"]
     logging.info(f"Selected best C: {best_C}")
 
-    best_model = LogisticRegression(C=best_C, max_iter=1000, class_weight='balanced')
+    best_model = LogisticRegression(C=best_C, max_iter=1000, class_weight="balanced")
     best_model.fit(X_train, y_train)
     y_val_pred = best_model.predict_proba(X_val)[:, 1]
 
@@ -75,7 +79,7 @@ def plot_confusion_matrix(
     y_pred: pd.Series,
     threshold: float = 0.5,
     model_name: str = "Model",
-    save_path: Optional[Path] = None
+    save_path: Optional[Path] = None,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """
     Plot confusion matrix for given true and predicted labels and return fig, ax.
@@ -84,10 +88,10 @@ def plot_confusion_matrix(
     cm = confusion_matrix(y_true, y_pred_labels)
 
     fig, ax = plt.subplots(figsize=(6, 5))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False, ax=ax)
-    ax.set_xlabel('Predicted Label')
-    ax.set_ylabel('True Label')
-    ax.set_title(f'Confusion Matrix - {model_name} (Threshold={threshold})')
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False, ax=ax)
+    ax.set_xlabel("Predicted Label")
+    ax.set_ylabel("True Label")
+    ax.set_title(f"Confusion Matrix - {model_name} (Threshold={threshold})")
 
     if save_path:
         fig.savefig(save_path)
@@ -101,7 +105,7 @@ def plot_roc_pr(
     y_true: pd.Series,
     y_pred: pd.Series,
     model_name: str = "Logistic Regression",
-    save_path: Optional[Path] = None
+    save_path: Optional[Path] = None,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """
     Plot ROC and Precision-Recall curves and return fig, ax.
@@ -114,18 +118,18 @@ def plot_roc_pr(
     fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
     # ROC Curve
-    ax[0].plot(fpr, tpr, label=f'{model_name} (AUC = {auc:.3f})')
-    ax[0].plot([0, 1], [0, 1], 'k--')
-    ax[0].set_xlabel('False Positive Rate')
-    ax[0].set_ylabel('True Positive Rate')
-    ax[0].set_title('ROC Curve')
+    ax[0].plot(fpr, tpr, label=f"{model_name} (AUC = {auc:.3f})")
+    ax[0].plot([0, 1], [0, 1], "k--")
+    ax[0].set_xlabel("False Positive Rate")
+    ax[0].set_ylabel("True Positive Rate")
+    ax[0].set_title("ROC Curve")
     ax[0].legend()
 
     # Precision-Recall Curve
-    ax[1].plot(recall, precision, label=f'{model_name} (AP = {ap:.3f})')
-    ax[1].set_xlabel('Recall')
-    ax[1].set_ylabel('Precision')
-    ax[1].set_title('Precision-Recall Curve')
+    ax[1].plot(recall, precision, label=f"{model_name} (AP = {ap:.3f})")
+    ax[1].set_xlabel("Recall")
+    ax[1].set_ylabel("Precision")
+    ax[1].set_title("Precision-Recall Curve")
     ax[1].legend()
 
     plt.tight_layout()
@@ -142,18 +146,18 @@ def evaluate_model(
     y_pred: pd.Series,
     model_name: str = "Model",
     output_dir: Optional[Path] = None,
-    threshold: float = 0.5
+    threshold: float = 0.5,
 ) -> Dict[str, float]:
     """
     Evaluate a model by computing metrics, logging, and saving plots.
-    
+
     Args:
         y_true: True labels
         y_pred: Predicted probabilities
         model_name: Name of the model (for logging and plot titles)
         output_dir: Directory to save plots
         threshold: Threshold to binarize probabilities for confusion matrix
-    
+
     Returns:
         dict: Dictionary with AUC, AP, F1 score
     """
@@ -169,17 +173,20 @@ def evaluate_model(
 
     # ROC + PR curves
     plot_roc_pr(
-        y_true, y_pred,
+        y_true,
+        y_pred,
         model_name=model_name,
-        save_path=output_dir / f"{model_name.replace(' ', '_').lower()}_curves.png"
+        save_path=output_dir / f"{model_name.replace(' ', '_').lower()}_curves.png",
     )
 
     # Confusion matrix
     plot_confusion_matrix(
-        y_true, y_pred,
+        y_true,
+        y_pred,
         threshold=threshold,
         model_name=model_name,
-        save_path=output_dir / f"{model_name.replace(' ', '_').lower()}_confusion_matrix.png"
+        save_path=output_dir
+        / f"{model_name.replace(' ', '_').lower()}_confusion_matrix.png",
     )
 
     return {"auc": auc, "ap": ap, "f1": f1}
@@ -215,7 +222,7 @@ if __name__ == "__main__":
         y_true=y_val,
         y_pred=y_val_pred,
         model_name="Logistic Regression - Validation",
-        output_dir=Path(__file__).resolve().parent
+        output_dir=Path(__file__).resolve().parent,
     )
 
     # Predict and evaluate on test set
@@ -224,5 +231,5 @@ if __name__ == "__main__":
         y_true=y_test,
         y_pred=y_test_pred,
         model_name="Logistic Regression - Test",
-        output_dir=Path(__file__).resolve().parent
+        output_dir=Path(__file__).resolve().parent,
     )

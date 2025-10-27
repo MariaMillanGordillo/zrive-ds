@@ -16,14 +16,15 @@ from src.module_3.data_loading import load_data
 from src.module_3.preprocessing import filter_orders, temporal_split_by_order
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
 def product_type_transform(X):
     return X.assign(
-        product_type=(X['product_type'].map(X['product_type'].value_counts(normalize=True)))
+        product_type=(
+            X["product_type"].map(X["product_type"].value_counts(normalize=True))
+        )
     )
 
 
@@ -40,8 +41,12 @@ def train_model(event):
 
     df_filtered = filter_orders(df, min_items=5)
     feature_cols = [
-        "product_type", "ordered_before", "abandoned_before",
-        "active_snoozed", "set_as_regular", "global_popularity"
+        "product_type",
+        "ordered_before",
+        "abandoned_before",
+        "active_snoozed",
+        "set_as_regular",
+        "global_popularity",
     ]
 
     X_train, X_val, X_test, y_train, y_val, y_test = temporal_split_by_order(
@@ -49,28 +54,21 @@ def train_model(event):
         date_col="order_date",
         order_col="order_id",
         feature_cols=feature_cols,
-        target_col="outcome"
+        target_col="outcome",
     )
 
     pipeline = make_pipeline(
-        FunctionTransformer(product_type_transform),
-        StandardScaler()
+        FunctionTransformer(product_type_transform), StandardScaler()
     )
 
     X_train_scaled = pd.DataFrame(
-        pipeline.fit_transform(X_train),
-        columns=feature_cols,
-        index=X_train.index
+        pipeline.fit_transform(X_train), columns=feature_cols, index=X_train.index
     )
     X_val_scaled = pd.DataFrame(
-        pipeline.transform(X_val),
-        columns=feature_cols,
-        index=X_val.index
+        pipeline.transform(X_val), columns=feature_cols, index=X_val.index
     )
     X_test_scaled = pd.DataFrame(
-        pipeline.transform(X_test),
-        columns=feature_cols,
-        index=X_test.index
+        pipeline.transform(X_test), columns=feature_cols, index=X_test.index
     )
 
     # Resample training data using SMOTE
@@ -93,18 +91,16 @@ def train_model(event):
     model_path = model_dir / model_name
 
     # Save as dict pipeline + model
-    to_save = {
-        "pipeline": pipeline,
-        "model": model
-    }
+    to_save = {"pipeline": pipeline, "model": model}
     joblib.dump(to_save, model_path)
     logging.info(f"Pipeline and model saved in {model_path}")
 
     return {
         "model_name": model_name,
         "model_path": str(model_path),
-        "validation_report": report
+        "validation_report": report,
     }
+
 
 def handler_fit(event, _):
     """
@@ -114,17 +110,14 @@ def handler_fit(event, _):
         result = train_model(event)
         return {
             "statusCode": 200,
-            "body": json.dumps({
-                "model_name": result["model_name"],
-                "model_path": result["model_path"]
-            })
+            "body": json.dumps(
+                {"model_name": result["model_name"], "model_path": result["model_path"]}
+            ),
         }
     except Exception as e:
         logging.error(f"Training failed: {e}")
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e)})
-        }
+        return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
+
 
 if __name__ == "__main__":
     test_event = {"model_parametrisation": {"n_estimators": 200, "max_depth": 3}}

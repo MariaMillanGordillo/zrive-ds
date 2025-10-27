@@ -4,8 +4,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.module_3.train_model import (plot_confusion_matrix, plot_roc_pr,
-                                      train_logistic_regression)
+from src.module_3.train_model import (
+    plot_confusion_matrix,
+    plot_roc_pr,
+    train_logistic_regression,
+)
 
 
 @pytest.fixture
