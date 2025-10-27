@@ -19,19 +19,21 @@ def test_train_model_with_mock_joblib_dump():
 
 
 def test_handler_fit_success():
-    response = handler_fit(test_event, None)
-    assert response["statusCode"] == 200
-    body = json.loads(response["body"])
-    assert "model_name" in body
-    assert "model_path" in body
+    with mock.patch("joblib.dump") as mock_dump:
+        response = handler_fit(test_event, None)
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        assert "model_name" in body
+        assert "model_path" in body
+        mock_dump.assert_called_once()
 
 
 def test_handler_fit_failure(monkeypatch):
     def raise_exception(event):
-        raise ValueError("Error simulado")
+        raise ValueError("Simulated error")
     monkeypatch.setattr("src.module_4.fit.train_model", raise_exception)
     response = handler_fit(test_event, None)
     assert response["statusCode"] == 500
     body = json.loads(response["body"])
     assert "error" in body
-    assert "Error simulado" in body["error"]
+    assert "Simulated error" in body["error"]  # Check for error in train function

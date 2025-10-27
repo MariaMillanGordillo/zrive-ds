@@ -5,6 +5,8 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
+from src.module_4.fit import product_type_transform
+
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
@@ -25,8 +27,10 @@ def load_pipeline_and_model(model_path=None):
     model_files = sorted(model_dir.glob("push_*.pkl"), reverse=True)
     if not model_files:
         raise FileNotFoundError("No model files found in 'models/' directory.")
+
     latest_model_path = model_files[0]
     logging.info(f"Loading pipeline and model from {latest_model_path}")
+
     saved = joblib.load(latest_model_path)
     return saved["pipeline"], saved["model"]
 
