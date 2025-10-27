@@ -8,8 +8,7 @@ import pandas as pd
 from dotenv import load_dotenv
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 load_dotenv()
@@ -27,9 +26,7 @@ def download_s3_folder(bucket_name: str, prefix: str, local_dir: Path) -> None:
         local_dir (Path): Local directory to store downloaded files.
     """
     s3 = boto3.client(
-        's3',
-        aws_access_key_id=AWS_ACCESS_KEY,
-        aws_secret_access_key=AWS_SECRET_KEY
+        "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
     )
 
     try:

@@ -7,8 +7,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
@@ -32,7 +31,10 @@ def filter_orders(df: pd.DataFrame, min_items: int = 5) -> pd.DataFrame:
         .index
     )
     filtered_df = df[df["order_id"].isin(qualifying_orders)]
-    logging.info(f"Filtered data to {filtered_df.shape[0]} rows across {filtered_df['order_id'].nunique()} orders")
+    logging.info(
+        f"""Filtered data to {filtered_df.shape[0]}
+            rows across {filtered_df['order_id'].nunique()} orders"""
+    )
     return filtered_df
 
 
@@ -44,7 +46,7 @@ def temporal_split_by_order(
     target_col: str = "outcome",
     train_size: float = 0.7,
     val_size: float = 0.2,
-    test_size: float = 0.1
+    test_size: float = 0.1,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
     """
     Splits a DataFrame into train, validation, and test sets based on order date,
@@ -59,11 +61,7 @@ def temporal_split_by_order(
         raise ValueError("train_size + val_size + test_size must equal 1.0")
 
     # Order unique orders by date
-    orders_sorted = (
-        df[[order_col, date_col]]
-        .drop_duplicates()
-        .sort_values(date_col)
-    )
+    orders_sorted = df[[order_col, date_col]].drop_duplicates().sort_values(date_col)
 
     n_orders = len(orders_sorted)
     train_end = int(train_size * n_orders)
@@ -97,7 +95,11 @@ def temporal_split_by_order(
     logging.info(f"Train orders: {len(train_orders)} ({train_size*100:.1f}%)")
     logging.info(f"Val orders: {len(val_orders)} ({val_size*100:.1f}%)")
     logging.info(f"Test orders: {len(test_orders)} ({test_size*100:.1f}%)")
-    logging.info(f"Train rows: {train_df.shape[0]}, Val rows: {val_df.shape[0]}, Test rows: {test_df.shape[0]}")
+    logging.info(
+        f"""Train rows: {train_df.shape[0]},
+            Val rows: {val_df.shape[0]},
+            Test rows: {test_df.shape[0]}"""
+    )
 
     return X_train, X_val, X_test, y_train, y_val, y_test
 
@@ -122,7 +124,7 @@ if __name__ == "__main__":
         "abandoned_before",
         "active_snoozed",
         "set_as_regular",
-        "global_popularity"
+        "global_popularity",
     ]
 
     X_train, X_val, X_test, y_train, y_val, y_test = temporal_split_by_order(
@@ -130,34 +132,30 @@ if __name__ == "__main__":
         date_col="order_date",
         order_col="order_id",
         feature_cols=feature_cols,
-        target_col="outcome"
+        target_col="outcome",
     )
 
     pipeline = make_pipeline(
         FunctionTransformer(
             lambda X: X.assign(
-                product_type=(X['product_type']
-                              .map(X['product_type']
-                                   .value_counts(normalize=True)))
+                product_type=(
+                    X["product_type"].map(
+                        X["product_type"].value_counts(normalize=True)
+                    )
+                )
             )
         ),
-        StandardScaler()
+        StandardScaler(),
     )
 
     X_train_scaled = pd.DataFrame(
-        pipeline.fit_transform(X_train),
-        columns=feature_cols,
-        index=X_train.index
+        pipeline.fit_transform(X_train), columns=feature_cols, index=X_train.index
     )
     X_val_scaled = pd.DataFrame(
-        pipeline.transform(X_val),
-        columns=feature_cols,
-        index=X_val.index
+        pipeline.transform(X_val), columns=feature_cols, index=X_val.index
     )
     X_test_scaled = pd.DataFrame(
-        pipeline.transform(X_test),
-        columns=feature_cols,
-        index=X_test.index
+        pipeline.transform(X_test), columns=feature_cols, index=X_test.index
     )
 
     datasets = {
@@ -166,7 +164,7 @@ if __name__ == "__main__":
         "X_test_scaled": X_test_scaled,
         "y_train": y_train,
         "y_val": y_val,
-        "y_test": y_test
+        "y_test": y_test,
     }
 
     for name, data in datasets.items():

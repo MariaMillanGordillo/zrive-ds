@@ -171,3 +171,6 @@ data/
 
 # Ignore png files
 *.png
+
+# Ignore model files
+models/

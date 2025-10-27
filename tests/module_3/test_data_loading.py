@@ -16,7 +16,7 @@ def test_download_s3_folder_downloads_files(mock_boto, tmp_path):
     mock_s3.list_objects_v2.return_value = {
         "Contents": [
             {"Key": "groceries/box_builder_dataset/file1.csv"},
-            {"Key": "groceries/box_builder_dataset/file2.csv"}
+            {"Key": "groceries/box_builder_dataset/file2.csv"},
         ]
     }
 
