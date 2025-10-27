@@ -32,7 +32,8 @@ def filter_orders(df: pd.DataFrame, min_items: int = 5) -> pd.DataFrame:
     )
     filtered_df = df[df["order_id"].isin(qualifying_orders)]
     logging.info(
-        f"Filtered data to {filtered_df.shape[0]} rows across {filtered_df['order_id'].nunique()} orders"
+        f"""Filtered data to {filtered_df.shape[0]}
+            rows across {filtered_df['order_id'].nunique()} orders"""
     )
     return filtered_df
 
@@ -95,7 +96,9 @@ def temporal_split_by_order(
     logging.info(f"Val orders: {len(val_orders)} ({val_size*100:.1f}%)")
     logging.info(f"Test orders: {len(test_orders)} ({test_size*100:.1f}%)")
     logging.info(
-        f"Train rows: {train_df.shape[0]}, Val rows: {val_df.shape[0]}, Test rows: {test_df.shape[0]}"
+        f"""Train rows: {train_df.shape[0]},
+            Val rows: {val_df.shape[0]},
+            Test rows: {test_df.shape[0]}"""
     )
 
     return X_train, X_val, X_test, y_train, y_val, y_test

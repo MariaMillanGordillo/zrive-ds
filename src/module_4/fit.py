@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -66,9 +65,6 @@ def train_model(event):
     )
     X_val_scaled = pd.DataFrame(
         pipeline.transform(X_val), columns=feature_cols, index=X_val.index
-    )
-    X_test_scaled = pd.DataFrame(
-        pipeline.transform(X_test), columns=feature_cols, index=X_test.index
     )
 
     # Resample training data using SMOTE

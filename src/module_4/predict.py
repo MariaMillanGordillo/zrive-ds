@@ -1,12 +1,9 @@
 import json
 import logging
-from datetime import datetime
 from pathlib import Path
 
 import joblib
 import pandas as pd
-
-from src.module_4.fit import product_type_transform
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -47,7 +44,8 @@ def predict_with_pipeline(pipeline, model, data_df):
 
 def handler_predict(event, _):
     """
-    Handler for prediction requests. Expects 'users' key with JSON string of user features.
+    Handler for prediction requests.
+    Expects 'users' key with JSON string of user features.
     Returns predictions in JSON format.
     """
     try:

@@ -34,7 +34,9 @@ def train_logistic_regression(
     and select the best based on AP.
 
     Returns:
-        Tuple[LogisticRegression, pd.Series, pd.DataFrame]: best_model, validation_predictions, results_df
+        Tuple[LogisticRegression,
+                pd.Series,
+                pd.DataFrame]: best_model, validation_predictions, results_df
     """
     results = []
 
