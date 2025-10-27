@@ -20,6 +20,13 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+
+def product_type_transform(X):
+    return X.assign(
+        product_type=(X['product_type'].map(X['product_type'].value_counts(normalize=True)))
+    )
+
+
 def train_model(event):
     """
     Train Gradient Boosting model using SMOTE and save pipeline + model to disk.
@@ -46,13 +53,7 @@ def train_model(event):
     )
 
     pipeline = make_pipeline(
-        FunctionTransformer(
-            lambda X: X.assign(
-                product_type=(X['product_type']
-                              .map(X['product_type']
-                                   .value_counts(normalize=True)))
-            )
-        ),
+        FunctionTransformer(product_type_transform),
         StandardScaler()
     )
 
