@@ -72,8 +72,10 @@ for obj in response.get("Contents", []):
         logging.info(f"Downloaded {local_path}")
 ```
 
-    2025-10-26 20:36:33,144 - INFO - Data folder: /Users/maria/Desktop/Zrive DS/zrive-ds/data
-    2025-10-26 20:36:33,557 - INFO - Already exists: /Users/maria/Desktop/Zrive DS/zrive-ds/data/box_builder_dataset/feature_frame.csv, skipping download.
+    2025-10-27 09:40:44,560 - INFO - Data folder: /Users/maria/Desktop/Zrive DS/zrive-ds/data
+
+
+    2025-10-27 09:40:45,091 - INFO - Already exists: /Users/maria/Desktop/Zrive DS/zrive-ds/data/box_builder_dataset/feature_frame.csv, skipping download.
 
 
 
@@ -279,8 +281,8 @@ logging.info(f"Filtered dataset size: {df_filtered.shape[0]} rows")
 df_filtered.head()
 ```
 
-    2025-10-26 20:36:45,239 - INFO - Original dataset size: 2880549 rows
-    2025-10-26 20:36:45,241 - INFO - Filtered dataset size: 2163953 rows
+    2025-10-27 09:40:56,602 - INFO - Original dataset size: 2880549 rows
+    2025-10-27 09:40:56,604 - INFO - Filtered dataset size: 2163953 rows
 
 
 
@@ -564,12 +566,12 @@ X_train, X_val, X_test, y_train, y_val, y_test = temporal_split_by_order(
 logging.info(f"Shapes -> Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}")
 ```
 
-    2025-10-26 20:36:46,844 - INFO - Total unique orders: 2603
-    2025-10-26 20:36:46,844 - INFO - Train orders: 1822 (70.0%)
-    2025-10-26 20:36:46,845 - INFO - Val orders: 520 (20.0%)
-    2025-10-26 20:36:46,845 - INFO - Test orders: 261 (10.0%)
-    2025-10-26 20:36:46,846 - INFO - Train rows: 1446691, Val rows: 466801, Test rows: 250461
-    2025-10-26 20:36:46,882 - INFO - Shapes -> Train: (1446691, 6), Val: (466801, 6), Test: (250461, 6)
+    2025-10-27 09:40:58,226 - INFO - Total unique orders: 2603
+    2025-10-27 09:40:58,227 - INFO - Train orders: 1822 (70.0%)
+    2025-10-27 09:40:58,228 - INFO - Val orders: 520 (20.0%)
+    2025-10-27 09:40:58,229 - INFO - Test orders: 261 (10.0%)
+    2025-10-27 09:40:58,230 - INFO - Train rows: 1446691, Val rows: 466801, Test rows: 250461
+    2025-10-27 09:40:58,266 - INFO - Shapes -> Train: (1446691, 6), Val: (466801, 6), Test: (250461, 6)
 
 
 The next step is transforming the categorical features into numericals to train the model. As we have so many categories in `product_type` one-hot encoding would increase the df size a lot, so we have to use a different encoding method. The final idea was to use frequency encoding because other, such as label encoding, create an inexisting order.
@@ -584,7 +586,7 @@ X_test["product_type"] = X_test["product_type"].map(freq_map).fillna(0)
 logging.info("Applied frequency encoding to 'product_type'")
 ```
 
-    2025-10-26 20:36:47,233 - INFO - Applied frequency encoding to 'product_type'
+    2025-10-27 09:40:58,629 - INFO - Applied frequency encoding to 'product_type'
 
 
 Lastly, we scale the data, which is very important for models like Ridge and Lasso since they penalise high weights.
@@ -604,12 +606,14 @@ We can use a feature, such as `global popularity`, as a baseline model. That way
 
 
 ```python
-roc_auc = roc_auc_score(df['outcome'], df['global_popularity'])
-pr_auc = average_precision_score(df['outcome'], df['global_popularity'])
+X_train_scaled_df = pd.DataFrame(X_train_scaled, columns=X_train.columns, index=X_train.index)
+
+roc_auc = roc_auc_score(y_train, X_train_scaled_df['global_popularity'])
+pr_auc = average_precision_score(y_train, X_train_scaled_df['global_popularity'])
 logging.info(f"Global Popularity - ROC-AUC: {roc_auc:.4f}, PR-AUC: {pr_auc:.4f}")
 ```
 
-    2025-10-26 20:36:53,292 - INFO - Global Popularity - ROC-AUC: 0.7902, PR-AUC: 0.0618
+    2025-10-27 09:41:01,491 - INFO - Global Popularity - ROC-AUC: 0.7868, PR-AUC: 0.0600
 
 
 ### Linear models
@@ -629,7 +633,7 @@ val_f1 = f1_score(y_val, y_val_pred_ols.round())
 logging.info(f"Validation F1 Score: {val_f1:.4f}")
 ```
 
-    2025-10-26 20:36:56,421 - INFO - Validation F1 Score: 0.1207
+    2025-10-27 09:41:04,550 - INFO - Validation F1 Score: 0.1207
 
 
 An interesting point is understanding the importance of each feature in the model results.
@@ -682,7 +686,7 @@ val_f1 = f1_score(y_val, y_val_pred_l2.round())
 logging.info(f"Validation F1 Score: {val_f1:.4f}")
 ```
 
-    2025-10-26 20:37:13,822 - INFO - Logistic Regression tuning results (sorted by AP):
+    2025-10-27 09:41:25,203 - INFO - Logistic Regression tuning results (sorted by AP):
              C       auc        ap
     0    0.001  0.837265  0.145544
     1    0.010  0.837298  0.145466
@@ -690,8 +694,8 @@ logging.info(f"Validation F1 Score: {val_f1:.4f}")
     3    1.000  0.837299  0.145451
     4  100.000  0.837299  0.145451
     5   10.000  0.837299  0.145451
-    2025-10-26 20:37:13,824 - INFO - Selected best C: 0.001
-    2025-10-26 20:37:16,881 - INFO - Validation F1 Score: 0.1209
+    2025-10-27 09:41:25,204 - INFO - Selected best C: 0.001
+    2025-10-27 09:41:28,519 - INFO - Validation F1 Score: 0.1209
 
 
 
@@ -744,16 +748,16 @@ logging.info(f"Validation F1 Score: {val_f1:.4f}")
 
 ```
 
-    2025-10-26 20:37:32,968 - INFO - Logistic Regression L1 tuning results:
+    2025-10-27 09:41:46,772 - INFO - Logistic Regression L1 tuning results:
              C       auc        ap
-    0  100.000  0.837303  0.145459
-    1   10.000  0.837303  0.145459
+    0   10.000  0.837303  0.145460
+    1  100.000  0.837303  0.145459
     2    1.000  0.837303  0.145459
     3    0.100  0.837303  0.145455
     4    0.010  0.837312  0.145433
     5    0.001  0.837467  0.145172
-    2025-10-26 20:37:32,969 - INFO - Selected best C for L1 Logistic Regression: 100.0
-    2025-10-26 20:37:35,647 - INFO - Validation F1 Score: 0.1207
+    2025-10-27 09:41:46,774 - INFO - Selected best C for L1 Logistic Regression: 10.0
+    2025-10-27 09:41:49,843 - INFO - Validation F1 Score: 0.1207
 
 
 
@@ -768,11 +772,11 @@ print(importance)
 
                  feature      coef
     5  global_popularity  0.900266
-    1     ordered_before  0.387941
-    2   abandoned_before  0.160191
+    1     ordered_before  0.387942
+    2   abandoned_before  0.160190
     4     set_as_regular  0.091843
     0       product_type  0.072530
-    3     active_snoozed  0.030742
+    3     active_snoozed  0.030741
 
 
 #### Logistic Regression
@@ -810,7 +814,7 @@ ap_log = average_precision_score(y_val, y_val_pred_log)
 logging.info(f"Logistic Regression F1 Score: {f1_score(y_val, y_val_pred_log.round()):.4f}")
 ```
 
-    2025-10-26 20:37:52,812 - INFO - Logistic tuning results (sorted by AP):
+    2025-10-27 09:42:09,254 - INFO - Logistic tuning results (sorted by AP):
              C       auc        ap
     0    0.001  0.837265  0.145544
     1    0.010  0.837298  0.145466
@@ -818,8 +822,8 @@ logging.info(f"Logistic Regression F1 Score: {f1_score(y_val, y_val_pred_log.rou
     3    1.000  0.837299  0.145451
     4  100.000  0.837299  0.145451
     5   10.000  0.837299  0.145451
-    2025-10-26 20:37:52,813 - INFO - Selected best C: 0.001
-    2025-10-26 20:37:56,541 - INFO - Logistic Regression F1 Score: 0.1209
+    2025-10-27 09:42:09,255 - INFO - Selected best C: 0.001
+    2025-10-27 09:42:13,408 - INFO - Logistic Regression F1 Score: 0.1209
 
 
 
@@ -890,10 +894,10 @@ Looking at the confusion matrices we can see how all the models perform quite si
 
 ```python
 models = [
-    ("OLS", y_val_pred_ols),
-    ("Ridge", y_val_pred_l2),
-    ("Lasso", y_val_pred_l1),
-    ("Logistic", y_val_pred_log),
+    ("Logistic Regression (OLS)", y_val_pred_ols),
+    ("Logistic Regression L2", y_val_pred_l2),
+    ("Logistic Regression L1", y_val_pred_l1),
+    ("Logistic Regression", y_val_pred_log),
 ]
 
 metrics = []
