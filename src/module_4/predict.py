@@ -6,16 +6,23 @@ import joblib
 import pandas as pd
 
 from src.module_4.fit import product_type_transform
+from typing import Optional, Tuple, Any, Union
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
-def load_pipeline_and_model(model_path=None):
+def load_pipeline_and_model(model_path: Optional[Union[str, Path]] = None) -> Tuple[Any, Any]:
     """
     Loads saved pipeline and model dictionary.
     If no path is provided, loads most recent from 'models/' directory.
+
+    Args:
+        model_path: Optional path to a specific .pkl file (str or Path).
+
+    Returns:
+        Tuple containing (pipeline, model).
     """
     if model_path is not None:
         saved = joblib.load(model_path)
@@ -34,8 +41,7 @@ def load_pipeline_and_model(model_path=None):
     saved = joblib.load(latest_model_path)
     return saved["pipeline"], saved["model"]
 
-
-def predict_with_pipeline(pipeline, model, data_df):
+def predict_with_pipeline(pipeline: Any, model: Any, data_df: pd.DataFrame) -> dict:
     """
     Receives pipeline, trained model, and user data. Returns prediction dict.
     """
@@ -46,7 +52,7 @@ def predict_with_pipeline(pipeline, model, data_df):
     return dict(zip(data_df.index, preds))
 
 
-def handler_predict(event, _):
+def handler_predict(event: dict, _: Any) -> dict:
     """
     Handler for prediction requests.
     Expects 'users' key with JSON string of user features.

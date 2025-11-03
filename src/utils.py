@@ -1,20 +1,23 @@
+import pandas as pd
 import logging
+from typing import Tuple, List, Optional
 
 logging.basicConfig(
     level=logging.INFO,  # Info level for general information
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
+
 def temporal_split_by_order(
-    df, 
-    date_col, 
-    order_col="order_id", 
-    feature_cols=None,
-    target_col="outcome", 
-    train_size=0.7, 
-    val_size=0.2, 
-    test_size=0.1
-):
+    df: pd.DataFrame,
+    date_col: str,
+    order_col: str = "order_id",
+    feature_cols: Optional[List[str]] = None,
+    target_col: str = "outcome",
+    train_size: float = 0.7,
+    val_size: float = 0.2,
+    test_size: float = 0.1,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
     """
     Splits a DataFrame into train, validation, and test sets based on order date,
     ensuring no items from the same order appear in multiple splits.

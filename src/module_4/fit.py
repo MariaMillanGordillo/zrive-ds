@@ -19,7 +19,7 @@ logging.basicConfig(
 )
 
 
-def product_type_transform(X):
+def product_type_transform(X: pd.DataFrame) -> pd.DataFrame:
     return X.assign(
         product_type=(
             X["product_type"].map(X["product_type"].value_counts(normalize=True))
@@ -27,7 +27,7 @@ def product_type_transform(X):
     )
 
 
-def train_model(event):
+def train_model(event: dict) -> dict:
     """
     Train Gradient Boosting model using SMOTE and save pipeline + model to disk.
     """
@@ -98,7 +98,7 @@ def train_model(event):
     }
 
 
-def handler_fit(event, _):
+def handler_fit(event: dict, _: Any) -> dict:
     """
     API-compatible handler: trains the model and returns metadata.
     """
