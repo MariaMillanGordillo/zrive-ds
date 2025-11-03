@@ -64,6 +64,8 @@ def temporal_split_by_order(
     logging.info(f"Train orders: {len(train_orders)} ({train_size*100:.1f}%)")
     logging.info(f"Val orders: {len(val_orders)} ({val_size*100:.1f}%)")
     logging.info(f"Test orders: {len(test_orders)} ({test_size*100:.1f}%)")
-    logging.info(f"Train rows: {train_df.shape[0]}, Val rows: {val_df.shape[0]}, Test rows: {test_df.shape[0]}")
+    logging.info(f"""Train rows: {train_df.shape[0]},
+                 Val rows: {val_df.shape[0]},
+                 Test rows: {test_df.shape[0]}""")
 
     return X_train, X_val, X_test, y_train, y_val, y_test

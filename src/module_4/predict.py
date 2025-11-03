@@ -6,7 +6,6 @@ from pathlib import Path
 import joblib
 import pandas as pd
 
-from src.module_4.fit import product_type_transform
 from typing import Optional, Tuple, Any, Union
 
 logging.basicConfig(
@@ -14,7 +13,9 @@ logging.basicConfig(
 )
 
 
-def load_pipeline_and_model(model_path: Optional[Union[str, Path]] = None) -> Tuple[Any, Any]:
+def load_pipeline_and_model(
+    model_path: Optional[Union[str, Path]] = None
+) -> Tuple[Any, Any]:
     """
     Loads saved pipeline and model dictionary.
     If no path is provided, loads most recent from 'models/' directory.
@@ -47,6 +48,7 @@ def load_pipeline_and_model(model_path: Optional[Union[str, Path]] = None) -> Tu
     saved = joblib.load(latest_model_path)
     return saved["pipeline"], saved["model"]
 
+
 def predict_with_pipeline(pipeline: Any, model: Any, data_df: pd.DataFrame) -> dict:
     """
     Receives pipeline, trained model, and user data. Returns prediction dict.
@@ -75,4 +77,3 @@ def handler_predict(event: dict, _: Any) -> dict:
     except Exception as e:
         logging.error(f"Error en predict: {e}")
         return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
-

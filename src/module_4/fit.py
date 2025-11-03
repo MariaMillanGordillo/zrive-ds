@@ -9,7 +9,7 @@ from imblearn.over_sampling import SMOTE
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import classification_report
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from src.module_3.data_loading import load_data
@@ -20,6 +20,7 @@ from typing import Any
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
 
 class CategoryProportionTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, column):
@@ -32,7 +33,12 @@ class CategoryProportionTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        return X[self.column].map(self.mapping_).fillna(0).values.reshape(-1, 1) # Apply mapping
+        return (
+            X[self.column]
+            .map(self.mapping_)
+            .fillna(0)
+            .values.reshape(-1, 1)  # Apply mapping
+        )
 
 
 def product_type_transform(X: pd.DataFrame) -> pd.DataFrame:
