@@ -79,20 +79,19 @@ def train_model(event: dict) -> dict:
     )
 
     pipeline = make_pipeline(
-        CategoryProportionTransformer(column='product_type'),
-        StandardScaler()
+        CategoryProportionTransformer(column="product_type"), StandardScaler()
     )
 
     pipeline.fit(X_train)
     X_train_scaled = pd.DataFrame(
         pipeline.transform(X_train),
         columns=["proportion_product_type"],
-        index=X_train.index
+        index=X_train.index,
     )
     X_val_scaled = pd.DataFrame(
         pipeline.transform(X_val),
         columns=["proportion_product_type"],
-        index=X_val.index
+        index=X_val.index,
     )
 
     # Resample training data using SMOTE

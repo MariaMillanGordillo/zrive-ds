@@ -26,11 +26,7 @@ def temporal_split_by_order(
         raise ValueError("train_size + val_size + test_size must equal 1.0")
 
     # Order unique orders by date
-    orders_sorted = (
-        df[[order_col, date_col]]
-        .drop_duplicates()
-        .sort_values(date_col)
-    )
+    orders_sorted = df[[order_col, date_col]].drop_duplicates().sort_values(date_col)
 
     n_orders = len(orders_sorted)
     train_end = int(train_size * n_orders)
@@ -64,8 +60,10 @@ def temporal_split_by_order(
     logging.info(f"Train orders: {len(train_orders)} ({train_size*100:.1f}%)")
     logging.info(f"Val orders: {len(val_orders)} ({val_size*100:.1f}%)")
     logging.info(f"Test orders: {len(test_orders)} ({test_size*100:.1f}%)")
-    logging.info(f"""Train rows: {train_df.shape[0]},
+    logging.info(
+        f"""Train rows: {train_df.shape[0]},
                  Val rows: {val_df.shape[0]},
-                 Test rows: {test_df.shape[0]}""")
+                 Test rows: {test_df.shape[0]}"""
+    )
 
     return X_train, X_val, X_test, y_train, y_val, y_test
