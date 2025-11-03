@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from pathlib import Path
@@ -25,6 +26,11 @@ def load_pipeline_and_model(model_path: Optional[Union[str, Path]] = None) -> Tu
         Tuple containing (pipeline, model).
     """
     if model_path is not None:
+        model_dir = Path("models/")
+        pkls = list(model_dir.glob("*.pkl"))
+        if not pkls:
+            raise FileNotFoundError("No .pkl files found in models/ directory.")
+        model_path = max(pkls, key=os.path.getmtime)
         saved = joblib.load(model_path)
         return saved["pipeline"], saved["model"]
 
