@@ -10,6 +10,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import classification_report
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from sklearn.base import BaseEstimator, TransformerMixin
 
 from src.module_3.data_loading import load_data
 from src.module_3.preprocessing import filter_orders, temporal_split_by_order
@@ -19,6 +20,19 @@ from typing import Any
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+class CategoryProportionTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, column):
+        self.column = column
+        self.mapping_ = {}
+
+    def fit(self, X, y=None):
+        counts = X[self.column].value_counts(normalize=True)  # Calculate proportions
+        self.mapping_ = counts.to_dict()
+        return self
+
+    def transform(self, X, y=None):
+        return X[self.column].map(self.mapping_).fillna(0).values.reshape(-1, 1) # Apply mapping
 
 
 def product_type_transform(X: pd.DataFrame) -> pd.DataFrame:
@@ -59,14 +73,20 @@ def train_model(event: dict) -> dict:
     )
 
     pipeline = make_pipeline(
-        FunctionTransformer(product_type_transform), StandardScaler()
+        CategoryProportionTransformer(column='product_type'),
+        StandardScaler()
     )
 
+    pipeline.fit(X_train)
     X_train_scaled = pd.DataFrame(
-        pipeline.fit_transform(X_train), columns=feature_cols, index=X_train.index
+        pipeline.transform(X_train),
+        columns=["proportion_product_type"],
+        index=X_train.index
     )
     X_val_scaled = pd.DataFrame(
-        pipeline.transform(X_val), columns=feature_cols, index=X_val.index
+        pipeline.transform(X_val),
+        columns=["proportion_product_type"],
+        index=X_val.index
     )
 
     # Resample training data using SMOTE
@@ -115,4 +135,3 @@ def handler_fit(event: dict, _: Any) -> dict:
     except Exception as e:
         logging.error(f"Training failed: {e}")
         return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
-
