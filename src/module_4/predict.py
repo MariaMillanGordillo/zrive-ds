@@ -76,29 +76,3 @@ def handler_predict(event: dict, _: Any) -> dict:
         logging.error(f"Error en predict: {e}")
         return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
 
-
-if __name__ == "__main__":
-    test_event = {
-        "users": json.dumps(
-            {
-                "user_1": {
-                    "product_type": 0.123,
-                    "ordered_before": 1,
-                    "abandoned_before": 0,
-                    "active_snoozed": 0,
-                    "set_as_regular": 1,
-                    "global_popularity": 0.5,
-                },
-                "user_2": {
-                    "product_type": 0.231,
-                    "ordered_before": 0,
-                    "abandoned_before": 1,
-                    "active_snoozed": 1,
-                    "set_as_regular": 0,
-                    "global_popularity": 0.3,
-                },
-            }
-        )
-    }
-    response = handler_predict(test_event, None)
-    print(response)

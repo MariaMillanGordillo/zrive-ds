@@ -116,8 +116,3 @@ def handler_fit(event: dict, _: Any) -> dict:
         logging.error(f"Training failed: {e}")
         return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
 
-
-if __name__ == "__main__":
-    test_event = {"model_parametrisation": {"n_estimators": 200, "max_depth": 3}}
-    response = handler_fit(test_event, None)
-    print(response)

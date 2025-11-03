@@ -37,3 +37,8 @@ def test_handler_fit_failure(monkeypatch):
     body = json.loads(response["body"])
     assert "error" in body
     assert "Simulated error" in body["error"]  # Check for error in train function
+
+if __name__ == "__main__":
+    test_event = {"model_parametrisation": {"n_estimators": 200, "max_depth": 3}}
+    response = handler_fit(test_event, None)
+    print(response)
