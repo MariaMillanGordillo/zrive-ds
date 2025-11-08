@@ -1,5 +1,6 @@
 import json
 import logging
+import warnings
 from datetime import datetime
 from pathlib import Path
 
@@ -33,12 +34,17 @@ class CategoryProportionTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        return (
-            X[self.column]
-            .map(self.mapping_)
-            .fillna(0)
-            .values.reshape(-1, 1)  # Apply mapping
-        )
+        col_values = X[self.column]
+
+        unseen = set(col_values.unique()) - set(self.mapping_.keys())
+        if unseen:
+            warnings.warn(
+                f"Found unseen categories during transform: {unseen}",
+                UserWarning
+            )
+        mapped = col_values.map(self.mapping_).fillna(0)
+
+        return mapped.values.reshape(-1, 1)
 
 
 def product_type_transform(X: pd.DataFrame) -> pd.DataFrame:
