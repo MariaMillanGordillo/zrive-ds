@@ -47,14 +47,6 @@ class CategoryProportionTransformer(BaseEstimator, TransformerMixin):
         return mapped.values.reshape(-1, 1)
 
 
-def product_type_transform(X: pd.DataFrame) -> pd.DataFrame:
-    return X.assign(
-        product_type=(
-            X["product_type"].map(X["product_type"].value_counts(normalize=True))
-        )
-    )
-
-
 def train_model(event: dict) -> dict:
     """
     Train Gradient Boosting model using SMOTE and save pipeline + model to disk.
