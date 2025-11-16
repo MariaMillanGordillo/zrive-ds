@@ -2,11 +2,11 @@ import os
 import joblib
 import numpy as np
 
-from src.exceptions import PredictionException
+from module_6.basket_model.utils.exceptions import PredictionException
 
 
 MODEL = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../..", "bin/model.joblib")
+    os.path.join(os.path.dirname(__file__), "../", "bin/model.joblib")
 )
 
 

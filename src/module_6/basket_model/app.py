@@ -1,12 +1,13 @@
 import time
+import uvicorn
 import logging
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
-from src.basket_model import BasketModel
-from src.basket_model.feature_store import FeatureStore
-from src.exceptions import UserNotFoundException, PredictionException
+from module_6.basket_model.basket_model import BasketModel
+from module_6. basket_model.feature_store import FeatureStore
+from module_6.basket_model.utils.exceptions import UserNotFoundException, PredictionException
 
 logging.basicConfig(
     filename="service_metrics.txt",
@@ -58,5 +59,4 @@ async def predict(req: PredictRequest):
 
 # Execute with: poetry run python src/module_6/app.py
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def count_regulars_in_order(order: pd.DataFrame, user_regulars: pd.DataFrame) -> int:
-    return len(set(order.item_ids).intersection(set(user_regulars.variant_id.values)))
+    return len(set(order.ordered_items).intersection(set(user_regulars.variant_id.values)))
 
 
 def count_regulars_in_orders(
