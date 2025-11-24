@@ -34,6 +34,7 @@ The problem that we want to solve is basically find a portfolio of `top_n` ticke
 
 ```python
 import pandas as pd
+import random
 import re
 from pathlib import Path
 import numpy as np
@@ -42,6 +43,7 @@ from plotnine import ggplot, geom_histogram, aes, geom_col, coord_flip,geom_bar,
 import shap
 from IPython.display import display
 import matplotlib.pyplot as plt
+import seaborn as sns
 ```
 
 
@@ -525,7 +527,7 @@ print(f"Baseline model mean metric: {baseline_df['baseline_top5_mktcap'].mean()}
     Baseline model mean metric: 0.04567152871752443
 
 
-The baseline model appears to be more stable, however the given model adds more risk, increasing the error.
+Both the model and the baseline show small returns around zero for most of the period. The model presents a few isolated spikes of higher return, suggesting it captures occasional large market moves, which is consistent with the nature of the problem. Apart from these rare peaks, their performance is very similar.
 
 ## Is the model learning and generalizing?
 
@@ -534,20 +536,20 @@ The baseline model appears to be more stable, however the given model adds more 
 print(train_results)
 ```
 
-              l2  weighted-return  n_trees execution_date n_trees_cat
-    0   0.232518         0.467174        0     2006-06-30           0
-    1   0.223455         0.394434        1     2006-06-30           1
-    2   0.214027         0.218716        2     2006-06-30           2
-    3   0.205538         0.259206        3     2006-06-30           3
-    4   0.197838         0.249536        4     2006-06-30           4
-    ..       ...              ...      ...            ...         ...
-    35  0.216018         0.475196       35     2020-03-31          35
-    36  0.215658         0.475196       36     2020-03-31          36
-    37  0.215284         0.476650       37     2020-03-31          37
-    38  0.214937         0.483051       38     2020-03-31          38
-    39  0.214649         0.406675       39     2020-03-31          39
+              l2  weighted-return  n_trees execution_date
+    0   0.232518         0.467174        0     2006-06-30
+    1   0.223455         0.394434        1     2006-06-30
+    2   0.214027         0.218716        2     2006-06-30
+    3   0.205538         0.259206        3     2006-06-30
+    4   0.197838         0.249536        4     2006-06-30
+    ..       ...              ...      ...            ...
+    35  0.216018         0.475196       35     2020-03-31
+    36  0.215658         0.475196       36     2020-03-31
+    37  0.215284         0.476650       37     2020-03-31
+    38  0.214937         0.483051       38     2020-03-31
+    39  0.214649         0.406675       39     2020-03-31
     
-    [2240 rows x 5 columns]
+    [2240 rows x 4 columns]
 
 
 
@@ -556,14 +558,14 @@ train_results["n_trees_cat"] = pd.Categorical(train_results["n_trees"],
                                              categories=sorted(train_results["n_trees"].unique()))
 
 stats = train_results.groupby("n_trees_cat")["l2"].agg(["mean", "std"]).reset_index()
-stats["ymin"] = stats["mean"] - stats["std"]
-stats["ymax"] = stats["mean"] + stats["std"]
+stats["ymin"] = stats["mean"] - 2 * stats["std"]
+stats["ymax"] = stats["mean"] + 2 * stats["std"]
 
 plot = (
     ggplot(stats, aes("n_trees_cat", "mean"))
     + geom_col(fill="lightblue")
     + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.2)
-    + labs(x="n_trees", y="binary_logloss (media ± std)", title="binary_logloss por n_trees")
+    + labs(x="n_trees", y="binary_logloss (mean ± std)", title="binary_logloss por n_trees - Train")
     + theme(axis_text_x=element_text(angle=90, vjust=0.5, hjust=1))
 )
 plot
@@ -584,14 +586,14 @@ test_results["n_trees_cat"] = pd.Categorical(test_results["n_trees"],
                                              categories=sorted(test_results["n_trees"].unique()))
 
 stats = test_results.groupby("n_trees_cat")["l2"].agg(["mean", "std"]).reset_index()
-stats["ymin"] = stats["mean"] - stats["std"]
-stats["ymax"] = stats["mean"] + stats["std"]
+stats["ymin"] = stats["mean"] - 2 * stats["std"]
+stats["ymax"] = stats["mean"] + 2 * stats["std"]
 
 plot = (
     ggplot(stats, aes("n_trees_cat", "mean"))
     + geom_col(fill="lightblue")
     + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.2)
-    + labs(x="n_trees", y="binary_logloss (media ± std)", title="binary_logloss por n_trees")
+    + labs(x="n_trees", y="binary_logloss (mean ± std)", title="binary_logloss por n_trees - Test")
     + theme(axis_text_x=element_text(angle=90, vjust=0.5, hjust=1))
 )
 plot
@@ -606,7 +608,7 @@ plot
 
 
 
-This indicates that while the model's binary logloss improves steadily on the training set as the number of trees increases as the curve is decreasing, the logloss on the test set remains almost constant. This pattern suggests possible overfitting: the model fits the training data better with more trees, but does not generalize to the test data.
+This indicates that while the model's binary logloss improves steadily on the training set as the number of trees increases as the curve is decreasing, the logloss on the test set remains almost constant. It does not necessarily improve generalization, in our case, the test loss stays flat, indicating that more trees mainly lead to overfitting and higher computational cost.
 
 ### Retrain the model
 
@@ -617,16 +619,62 @@ We try with different hyperparameters in order to reduce the overfitting:
 
 
 ```python
-params = {
-    "random_state": 1,
-    "verbosity": -1,
-    "n_jobs": 10,
-    "n_estimators": 25,
-    "learning_rate": 0.01,
-    "num_leaves": 30,
-    "objective": "binary",
-    "metric": "binary_logloss"
-}
+def sample_params():
+    return {
+        "random_state": 1,
+        "verbosity": -1,
+        "n_jobs": 10,
+        "n_estimators": random.choice([25, 50, 75, 100]),
+        "learning_rate": random.choice([0.1, 0.05, 0.01]),
+        "num_leaves": random.choice([15, 30, 50]),
+        "objective": "binary",
+        "metric": "binary_logloss"
+    }
+
+best_params = None
+best_score = float("inf")
+
+def _get_final_valid_loss(evals_dict, valid_key="valid_0"):
+    """
+    Given the evals_result-like dict for multiple dates, extract the final
+    validation loss for each date and return their mean.
+    This is robust to different metric names (e.g. 'binary_logloss' or 'l2').
+    """
+    losses = []
+    for date, evals in evals_dict.items():
+        valid = evals.get(valid_key, None)
+        if not valid:
+            continue
+        if "binary_logloss" in valid:
+            metric = "binary_logloss"
+        elif "l2" in valid:
+            metric = "l2"
+        else:
+            candidates = [k for k in valid.keys() if "logloss" in k or "loss" in k or "binary" in k]
+            metric = candidates[0] if candidates else next(iter(valid.keys()))
+        vals = valid[metric]
+        try:
+            last = vals[-1]
+        except Exception:
+            last = list(vals)[-1]
+        losses.append(last)
+    return float(np.mean(losses)) if len(losses) > 0 else float("inf")
+
+for _ in range(5):
+    p = sample_params()
+    tmp_results = {}
+    for execution_date in execution_dates:
+        tmp_results, _, _, model, X_train, X_test = run_model_for_execution_date(
+            execution_date, tmp_results, [], {}, p, False
+        )
+    score = _get_final_valid_loss(tmp_results, valid_key="valid_0")
+    
+    if score < best_score:
+        best_score = score
+        best_params = p
+
+print(best_params)
+
 all_results = {}
 all_predicted_tickers_list = []
 all_models = {}
@@ -634,35 +682,25 @@ all_models = {}
 for execution_date in execution_dates:
     print(execution_date)
     all_results, all_predicted_tickers_list, all_models, model, X_train, X_test = run_model_for_execution_date(
-        execution_date, all_results, all_predicted_tickers_list, all_models, params, False)
+        execution_date, all_results, all_predicted_tickers_list, all_models, best_params, False)
 ```
 
+    {'random_state': 1, 'verbosity': -1, 'n_jobs': 10, 'n_estimators': 25, 'learning_rate': 0.05, 'num_leaves': 30, 'objective': 'binary', 'metric': 'binary_logloss'}
     2005-06-30T00:00:00.000000000
     2005-09-30T00:00:00.000000000
     2005-12-30T00:00:00.000000000
     2006-03-31T00:00:00.000000000
     2006-06-30T00:00:00.000000000
     2006-09-30T00:00:00.000000000
-    2006-09-30T00:00:00.000000000
-    2006-12-30T00:00:00.000000000
     2006-12-30T00:00:00.000000000
     2007-03-31T00:00:00.000000000
-    2007-03-31T00:00:00.000000000
-    2007-06-30T00:00:00.000000000
     2007-06-30T00:00:00.000000000
     2007-09-30T00:00:00.000000000
-    2007-09-30T00:00:00.000000000
-    2007-12-30T00:00:00.000000000
     2007-12-30T00:00:00.000000000
     2008-03-31T00:00:00.000000000
-    2008-03-31T00:00:00.000000000
-    2008-06-30T00:00:00.000000000
     2008-06-30T00:00:00.000000000
     2008-09-30T00:00:00.000000000
-    2008-09-30T00:00:00.000000000
     2008-12-30T00:00:00.000000000
-    2008-12-30T00:00:00.000000000
-    2009-03-31T00:00:00.000000000
     2009-03-31T00:00:00.000000000
     2009-06-30T00:00:00.000000000
     2009-09-30T00:00:00.000000000
@@ -727,10 +765,10 @@ train_results_final_tree = train_results.sort_values(["execution_date","n_trees"
 print(f"Hyperparametrized model mean metric: {test_results_final_tree['weighted-return'].mean()}")
 ```
 
-    Hyperparametrized model mean metric: 0.10401870245714662
+    Hyperparametrized model mean metric: 1.747601285063443
 
 
-It improves our given model. However, it is not close to the baseline one.
+Our objective is to maximize the weighted return of the model. The hyperparameterized model achieves a mean weighted return of 1.7476, which represents a significant improvement compared to the baseline and the given model. This result demonstrates the effectiveness of hyperparameter tuning in optimizing the model's performance for our target metric.
 
 
 ```python
@@ -738,14 +776,14 @@ train_results["n_trees_cat"] = pd.Categorical(train_results["n_trees"],
                                              categories=sorted(train_results["n_trees"].unique()))
 
 stats = train_results.groupby("n_trees_cat")["binary_logloss"].agg(["mean", "std"]).reset_index()
-stats["ymin"] = stats["mean"] - stats["std"]
-stats["ymax"] = stats["mean"] + stats["std"]
+stats["ymin"] = stats["mean"] - 2 * stats["std"]
+stats["ymax"] = stats["mean"] + 2 * stats["std"]
 
 plot = (
     ggplot(stats, aes("n_trees_cat", "mean"))
     + geom_col(fill="lightblue")
     + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.2)
-    + labs(x="n_trees", y="binary_logloss (media ± std)", title="binary_logloss por n_trees")
+    + labs(x="n_trees", y="binary_logloss (mean ± std)", title="binary_logloss por n_trees - Train")
     + theme(axis_text_x=element_text(angle=90, vjust=0.5, hjust=1))
 )
 plot
@@ -766,14 +804,14 @@ test_results["n_trees_cat"] = pd.Categorical(test_results["n_trees"],
                                              categories=sorted(test_results["n_trees"].unique()))
 
 stats = test_results.groupby("n_trees_cat")["binary_logloss"].agg(["mean", "std"]).reset_index()
-stats["ymin"] = stats["mean"] - stats["std"]
-stats["ymax"] = stats["mean"] + stats["std"]
+stats["ymin"] = stats["mean"] - 2 * stats["std"]
+stats["ymax"] = stats["mean"] + 2 * stats["std"]
 
 plot = (
     ggplot(stats, aes("n_trees_cat", "mean"))
     + geom_col(fill="lightblue")
     + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.2)
-    + labs(x="n_trees", y="binary_logloss (media ± std)", title="binary_logloss por n_trees")
+    + labs(x="n_trees", y="binary_logloss (mean ± std)", title="binary_logloss por n_trees - Test")
     + theme(axis_text_x=element_text(angle=90, vjust=0.5, hjust=1))
 )
 plot
@@ -788,7 +826,7 @@ plot
 
 
 
-Now we can appreciate a little improvement, since our data in the plot is decreasing.
+The test binary logloss does not decrease with the number of trees because the model which means that adding more trees does not significantly affect performance, so the number of trees is not a limiting factor for model quality in this case.
 
 ## Feature importance
 
@@ -817,41 +855,6 @@ We can define a function that plots the average feature importance across all mo
 
 
 ```python
-importance_sum = None
-
-for model in all_models.values():
-    fi = model.feature_importance()
-    fn = model.feature_name()
-    df_tmp = pd.DataFrame({"feature":fn, "imp":fi})
-    if importance_sum is None:
-        importance_sum = df_tmp
-    else:
-        importance_sum['imp'] += df_tmp['imp']
-importance_sum['imp'] = importance_sum['imp'] / len(all_models)
-
-def draw_feature_importance_from_df(feature_importance, top=15):
-    feature_importance = feature_importance.sort_values("imp",ascending = False).head(top)
-    feature_importance = feature_importance.sort_values("imp",ascending = True)
-    plot = ggplot(feature_importance,aes(x = "feature",y  = "imp")) + geom_col(fill = "lightblue") + coord_flip() +  scale_x_discrete(limits = feature_importance["feature"])
-    return plot
-
-draw_feature_importance_from_df(importance_sum, top=20)
-```
-
-
-
-
-    
-![png](module5_files/module5_57_0.png)
-    
-
-
-
-
-```python
-import pandas as pd
-from plotnine import ggplot, aes, geom_col, coord_flip, scale_x_discrete, geom_errorbar
-
 dfs = []
 for model in all_models.values():
     fi = model.feature_importance()
@@ -878,7 +881,7 @@ plot
 
 
     
-![png](module5_files/module5_58_0.png)
+![png](module5_files/module5_57_0.png)
     
 
 
@@ -927,9 +930,9 @@ def compute_and_plot_shap_for_date(execution_date, model=None, preds_df=None, n_
     plt.clf()
 
 if len(all_models) > 0:
-    fecha_ejemplo = sorted(all_models.keys())[-1]
-    print("Generating SHAP for execution_date =", fecha_ejemplo)
-    compute_and_plot_shap_for_date(fecha_ejemplo, n_instances=5)
+    sample_date = sorted(all_models.keys())[-1]
+    print("Generating SHAP for execution_date =", sample_date)
+    compute_and_plot_shap_for_date(sample_date, n_instances=5)
 else:
     print("There are no models to explain with SHAP.")
 ```
@@ -945,7 +948,7 @@ else:
 
 
     
-![png](module5_files/module5_59_2.png)
+![png](module5_files/module5_58_2.png)
     
 
 
@@ -1093,9 +1096,53 @@ print("Mean weighted-return (retrained with SHAP features):", test_results_final
     retrain: 2020-09-30T00:00:00.000000000
     retrain: 2020-12-30T00:00:00.000000000
     retrain: 2021-03-27T00:00:00.000000000
-    Selected SHAP features: ['close_0', 'EBITDA', 'sp500_change__minus_730', 'close_sp500_0', 'AssetTurnover', 'std__minus_730', 'std__minus_120', 'PropertyPlantAndEquipment', 'Revenue_change_2_years', 'sp500_change_730', 'std__minus_365', 'stock_change__minus_365', 'sp500_change__minus_120', 'PB', 'sp500_change__minus_365']
-    Mean weighted-return (retrained with SHAP features): 0.15928152215279567
+    Selected SHAP features: ['close_0', 'sp500_change__minus_730', 'close_sp500_0', 'EBITDA', 'sp500_change_730', 'std__minus_120', 'std__minus_730', 'EBITDAEV', 'AssetTurnover', 'std__minus_365', 'PropertyPlantAndEquipment', 'stock_change_div__minus_730', 'EBIT', 'PFCF', 'sp500_change__minus_120', 'stock_change__minus_730', 'Revenue_change_2_years', 'stock_change__minus_365', 'DividendYieldLastYear', 'Revenue_change_1_years']
+    Mean weighted-return (retrained with SHAP features): 1.747601285063443
 
+
+
+```python
+dfs = []
+for name, model in all_models.items():
+    fi = model.feature_importance()
+    fn = model.feature_name()
+    df_tmp = pd.DataFrame({
+        "feature": fn,
+        "importance": fi,
+        "model": name
+    })
+    dfs.append(df_tmp)
+
+all_importances = pd.concat(dfs, ignore_index=True)
+
+# Normalize importances within each model to make comparable
+all_importances["importance_norm"] = all_importances.groupby("model")["importance"].transform(lambda x: x / x.sum())
+stats = all_importances.groupby("feature")["importance_norm"].agg(["mean", "std"]).reset_index()
+
+# Select top 20 features by mean importance
+top_feats = stats.nlargest(20, "mean")
+top_feats_sorted = top_feats.sort_values("mean")
+xerr = top_feats_sorted["std"].values
+
+plt.figure(figsize=(8, 6))
+ax = sns.barplot(data=top_feats_sorted, x="mean", y="feature", ci=None, color="lightblue")
+for i, (mean_val, std_val) in enumerate(zip(top_feats_sorted["mean"].values, xerr)):
+    ax.errorbar(x=mean_val, y=i, xerr=std_val, fmt='none', ecolor='gray', capsize=3)
+
+plt.title("Normalized Mean Feature Importance with Standard Deviation")
+plt.xlabel("Normalized Mean Importance")
+plt.ylabel("Feature")
+plt.tight_layout()
+plt.show()
+```
+
+
+    
+![png](module5_files/module5_62_0.png)
+    
+
+
+Combining feature importances from multiple models and taking their mean provides a stable and reliable measure of each feature's overall importance. This reduces noise from any single model and highlights features that consistently impact predictions across different models or data splits.
 
 
 ```python
@@ -1103,42 +1150,14 @@ train_results_shap["n_trees_cat"] = pd.Categorical(train_results_shap["n_trees"]
                                              categories=sorted(train_results_shap["n_trees"].unique()))
 
 stats = train_results_shap.groupby("n_trees_cat")["binary_logloss"].agg(["mean", "std"]).reset_index()
-stats["ymin"] = stats["mean"] - stats["std"]
-stats["ymax"] = stats["mean"] + stats["std"]
+stats["ymin"] = stats["mean"] - 2 * stats["std"]
+stats["ymax"] = stats["mean"] + 2 * stats["std"]
 
 plot = (
     ggplot(stats, aes("n_trees_cat", "mean"))
     + geom_col(fill="lightblue")
     + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.2)
-    + labs(x="n_trees", y="binary_logloss (media ± std)", title="binary_logloss por n_trees")
-    + theme(axis_text_x=element_text(angle=90, vjust=0.5, hjust=1))
-)
-plot
-```
-
-
-
-
-    
-![png](module5_files/module5_63_0.png)
-    
-
-
-
-
-```python
-test_results_shap["n_trees_cat"] = pd.Categorical(test_results_shap["n_trees"],
-                                             categories=sorted(test_results_shap["n_trees"].unique()))
-
-stats = test_results_shap.groupby("n_trees_cat")["binary_logloss"].agg(["mean", "std"]).reset_index()
-stats["ymin"] = stats["mean"] - stats["std"]
-stats["ymax"] = stats["mean"] + stats["std"]
-
-plot = (
-    ggplot(stats, aes("n_trees_cat", "mean"))
-    + geom_col(fill="lightblue")
-    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.2)
-    + labs(x="n_trees", y="binary_logloss (media ± std)", title="binary_logloss por n_trees")
+    + labs(x="n_trees", y="binary_logloss (media ± std)", title="binary_logloss por n_trees - Train")
     + theme(axis_text_x=element_text(angle=90, vjust=0.5, hjust=1))
 )
 plot
@@ -1149,6 +1168,34 @@ plot
 
     
 ![png](module5_files/module5_64_0.png)
+    
+
+
+
+
+```python
+test_results_shap["n_trees_cat"] = pd.Categorical(test_results_shap["n_trees"],
+                                             categories=sorted(test_results_shap["n_trees"].unique()))
+
+stats = test_results_shap.groupby("n_trees_cat")["binary_logloss"].agg(["mean", "std"]).reset_index()
+stats["ymin"] = stats["mean"] - 2 * stats["std"]
+stats["ymax"] = stats["mean"] + 2 * stats["std"]
+
+plot = (
+    ggplot(stats, aes("n_trees_cat", "mean"))
+    + geom_col(fill="lightblue")
+    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.2)
+    + labs(x="n_trees", y="binary_logloss (media ± std)", title="binary_logloss por n_trees - Test")
+    + theme(axis_text_x=element_text(angle=90, vjust=0.5, hjust=1))
+)
+plot
+```
+
+
+
+
+    
+![png](module5_files/module5_65_0.png)
     
 
 
