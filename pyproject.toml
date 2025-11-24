@@ -41,3 +41,6 @@ dev = [
     "mypy (>=1.18.2,<2.0.0)",
     "pytest (>=8.4.2,<9.0.0)"
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

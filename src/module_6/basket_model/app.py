@@ -2,12 +2,15 @@ import time
 import uvicorn
 import logging
 from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel
-from starlette.responses import JSONResponse
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, field_validator, Field
 
-from module_6.basket_model.basket_model import BasketModel
-from module_6. basket_model.feature_store import FeatureStore
-from module_6.basket_model.utils.exceptions import UserNotFoundException, PredictionException
+from src.module_6.basket_model.basket_model import BasketModel
+from src.module_6.basket_model.feature_store import FeatureStore
+from src.module_6.basket_model.utils.exceptions import (
+    UserNotFoundException,
+    PredictionException
+)
 
 logging.basicConfig(
     filename="service_metrics.txt",
@@ -20,8 +23,17 @@ app = FastAPI()
 model = BasketModel()
 feature_store = FeatureStore()
 
-class PredictRequest(BaseModel):
-    user_id: str
+
+class PredictRequest(BaseModel):  # Validate non-empty user_id
+    user_id: str = Field(...)
+
+    @field_validator('user_id')
+    @classmethod
+    def user_id_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('user_id must not be empty')
+        return v
+
 
 @app.middleware("http")
 async def log_metrics(request: Request, call_next):
@@ -29,20 +41,35 @@ async def log_metrics(request: Request, call_next):
     try:
         response = await call_next(request)
         latency = time.time() - start_time
-        logging.info(f"Request {request.method} {request.url.path} completed in {latency:.3f}s with status {response.status_code}")
+        logging.info(f"""Request {request.method} {request.url.path}
+                     completed in {latency:.3f}s with status {response.status_code}""")
         return response
     except Exception as ex:
         latency = time.time() - start_time
-        logging.error(f"Request {request.method} {request.url.path} failed in {latency:.3f}s: {ex}")
+        logging.error(f"""Request {request.method} {request.url.path}
+                      failed in {latency:.3f}s: {ex}""")
         raise ex
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logging.error(f"""Unhandled error for request
+                  {request.method} {request.url.path}: {exc}""")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
 
 @app.get("/status")
 async def status():
     return {"status": "ok"}
 
+
 @app.get("/")
 async def root():
     return {"message": "API is running"}
+
 
 @app.post("/predict")
 async def predict(req: PredictRequest):
@@ -54,12 +81,23 @@ async def predict(req: PredictRequest):
         logging.error(f"User {user_id} not found in feature store")
         raise HTTPException(status_code=404, detail="User not found")
     try:
+        model_start = time.time()
         prediction = model.predict(features)[0]
-        logging.info(f"Prediction for user {user_id}: {prediction}")
+        model_latency = time.time() - model_start
+
+        logging.info(
+            f"[MODEL] user_id={user_id} "
+            f"num_features={features.shape[1]} "
+            f"features_sample={features[0][:5].tolist()} "
+            f"prediction={prediction} "
+            f"model_latency={model_latency:.4f}s"
+        )
+
     except PredictionException:
         logging.error(f"Prediction failed for user {user_id}")
         raise HTTPException(status_code=500, detail="Prediction failed")
     return {"predicted_price": float(prediction)}
+
 
 # Execute with: poetry run python src/module_6/app.py
 if __name__ == "__main__":
