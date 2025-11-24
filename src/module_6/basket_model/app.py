@@ -40,6 +40,10 @@ async def log_metrics(request: Request, call_next):
 async def status():
     return {"status": "ok"}
 
+@app.get("/")
+async def root():
+    return {"message": "API is running"}
+
 @app.post("/predict")
 async def predict(req: PredictRequest):
     user_id = req.user_id
