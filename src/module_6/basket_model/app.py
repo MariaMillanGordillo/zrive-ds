@@ -1,3 +1,4 @@
+import os
 import time
 import uvicorn
 import logging
@@ -5,21 +6,24 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator, Field
 
-from src.module_6.basket_model.basket_model import BasketModel
-from src.module_6.basket_model.feature_store import FeatureStore
-from src.module_6.basket_model.utils.exceptions import (
+from module_6.basket_model.basket_model import BasketModel
+from module_6.basket_model.feature_store import FeatureStore
+from module_6.basket_model.utils.exceptions import (
     UserNotFoundException,
     PredictionException
 )
 
+os.makedirs("logs", exist_ok=True)
+log_path = os.path.join("logs", "service_metrics.txt")
+
 logging.basicConfig(
-    filename="service_metrics.txt",
+    filename=log_path,
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+logging.info("Servicio iniciado: log de prueba")
 app = FastAPI()
-
 model = BasketModel()
 feature_store = FeatureStore()
 
