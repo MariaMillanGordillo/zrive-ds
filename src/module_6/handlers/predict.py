@@ -1,7 +1,6 @@
 import time
 import logging
-from fastapi import FastAPI, Request
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from module_6.basket_model.basket_model import BasketModel
@@ -10,7 +9,8 @@ from module_6.exceptions import (
     UserNotFoundException,
     PredictionException
 )
-app = FastAPI()
+
+router = APIRouter(prefix='/predict')
 model = BasketModel()
 feature_store = FeatureStore()
 
@@ -26,7 +26,7 @@ class PredictRequest(BaseModel):  # Validate non-empty user_id
         return v
 
 
-@app.post("/predict")
+@router.post("/")
 async def predict(req: PredictRequest):
     user_id = req.user_id
     logging.info(f"Received prediction request for user_id: {user_id}")

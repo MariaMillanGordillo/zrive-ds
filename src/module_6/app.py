@@ -2,16 +2,10 @@ import os
 import time
 import uvicorn
 import logging
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, field_validator, Field
 
-from module_6.basket_model.basket_model import BasketModel
-from module_6.basket_model.feature_store import FeatureStore
-from module_6.exceptions import (
-    UserNotFoundException,
-    PredictionException
-)
+from module_6.routes import create_app
 
 os.makedirs("logs", exist_ok=True)
 log_path = os.path.join("logs", "service_metrics.txt")
@@ -23,9 +17,7 @@ logging.basicConfig(
 )
 
 logging.info("Servicio iniciado: log de prueba")
-app = FastAPI()
-model = BasketModel()
-feature_store = FeatureStore()
+app = create_app()
 
 
 @app.middleware("http")
@@ -54,16 +46,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/status")
-async def status():
-    return {"status": "ok"}
 
 
-@app.get("/")
-async def root():
-    return {"message": "API is running"}
 
-
-# Execute with: poetry run python src/module_6/app.py
+# Execute with: poetry run uvicorn module_6.app:app --reload --app-dir src
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
