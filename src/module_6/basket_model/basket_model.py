@@ -2,7 +2,7 @@ import os
 import joblib
 import numpy as np
 
-from module_6.basket_model.utils.exceptions import PredictionException
+from module_6.basket_model.handlers.exceptions import PredictionException
 
 
 MODEL = os.path.abspath(

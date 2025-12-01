@@ -8,7 +8,7 @@ from pydantic import BaseModel, field_validator, Field
 
 from module_6.basket_model.basket_model import BasketModel
 from module_6.basket_model.feature_store import FeatureStore
-from module_6.basket_model.utils.exceptions import (
+from module_6.exceptions import (
     UserNotFoundException,
     PredictionException
 )

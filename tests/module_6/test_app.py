@@ -1,11 +1,11 @@
 import pandas as pd
 
 from fastapi.testclient import TestClient
-from src.module_6.basket_model.app import app
+from module_6.app import app
 
 from src.module_6.basket_model.feature_store import FeatureStore
 from src.module_6.basket_model.basket_model import BasketModel
-from src.module_6.basket_model.utils.exceptions import PredictionException
+from src.module_6.exceptions import PredictionException
 
 client = TestClient(app)
 
