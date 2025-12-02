@@ -1,8 +1,8 @@
 import pandas as pd
 
-from module_6.handlers import features
-from module_6.handlers import loaders
-from module_6.exceptions import UserNotFoundException
+from basket_model import features
+from basket_model import loaders
+from exceptions import UserNotFoundException
 
 
 class FeatureStore:

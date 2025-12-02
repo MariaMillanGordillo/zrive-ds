@@ -3,9 +3,9 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
-from module_6.basket_model.basket_model import BasketModel
-from module_6.basket_model.feature_store import FeatureStore
-from module_6.exceptions import (
+from basket_model.basket_model import BasketModel
+from basket_model.feature_store import FeatureStore
+from exceptions import (
     UserNotFoundException,
     PredictionException
 )
@@ -47,8 +47,7 @@ async def predict(req: PredictRequest):
             f"prediction={prediction} "
             f"model_latency={model_latency:.4f}s"
         )
-
     except PredictionException:
         logging.error(f"Prediction failed for user {user_id}")
         raise HTTPException(status_code=500, detail="Prediction failed")
-    return {"predicted_price": float(prediction)}
+    return {"predicted_price": float(prediction.mean())}
