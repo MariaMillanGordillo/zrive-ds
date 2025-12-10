@@ -174,3 +174,6 @@ data/
 
 # Ignore model files
 models/
+
+# Ignore log files
+logs/
