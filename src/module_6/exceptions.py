@@ -1,8 +1,8 @@
 class UserNotFoundException(Exception):
-    """Excepción lanzada cuando el usuario no se encuentra en el feature store."""
+    """Exception thrown when a user is not found in the database."""
     pass
 
 
 class PredictionException(Exception):
-    """Excepción lanzada cuando ocurre un error durante la predicción del modelo."""
+    """Excepción thrown when there is an error during the prediction process."""
     pass
