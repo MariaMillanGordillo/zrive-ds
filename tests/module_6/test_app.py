@@ -18,6 +18,7 @@ def client():
 def mock_get_features():
     def _mock_get_features(self, _):
         return pd.Series([1, 2, 3, 4], dtype=float)
+
     return _mock_get_features
 
 
@@ -25,6 +26,7 @@ def mock_get_features():
 def mock_predict_success():
     def _mock_predict(self, _):
         return [42.0]
+
     return _mock_predict
 
 
@@ -32,6 +34,7 @@ def mock_predict_success():
 def mock_predict_failure():
     def _mock_predict(self, _):
         raise PredictionException("fail")
+
     return _mock_predict
 
 
@@ -46,7 +49,9 @@ def test_predict_user_not_found(client):
     assert response.status_code == 404
 
 
-def test_predict_valid_user(client, monkeypatch, mock_get_features, mock_predict_success):
+def test_predict_valid_user(
+    client, monkeypatch, mock_get_features, mock_predict_success
+):
     monkeypatch.setattr(FeatureStore, "get_features", mock_get_features)
     monkeypatch.setattr(BasketModel, "predict", mock_predict_success)
 
@@ -60,7 +65,9 @@ def test_predict_invalid_user_id(client):
     assert response.status_code == 422
 
 
-def test_predict_model_failure(client, monkeypatch, mock_get_features, mock_predict_failure):
+def test_predict_model_failure(
+    client, monkeypatch, mock_get_features, mock_predict_failure
+):
     monkeypatch.setattr(FeatureStore, "get_features", mock_get_features)
     monkeypatch.setattr(BasketModel, "predict", mock_predict_failure)
 

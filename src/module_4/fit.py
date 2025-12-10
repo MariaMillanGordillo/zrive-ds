@@ -39,8 +39,7 @@ class CategoryProportionTransformer(BaseEstimator, TransformerMixin):
         unseen = set(col_values.unique()) - set(self.mapping_.keys())
         if unseen:
             warnings.warn(
-                f"Found unseen categories during transform: {unseen}",
-                UserWarning
+                f"Found unseen categories during transform: {unseen}", UserWarning
             )
         mapped = col_values.map(self.mapping_).fillna(0)
 
