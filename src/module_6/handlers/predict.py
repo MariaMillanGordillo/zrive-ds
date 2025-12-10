@@ -3,14 +3,11 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
-from basket_model.basket_model import BasketModel
-from basket_model.feature_store import FeatureStore
-from exceptions import (
-    UserNotFoundException,
-    PredictionException
-)
+from src.module_6.basket_model.basket_model import BasketModel
+from src.module_6.basket_model.feature_store import FeatureStore
+from src.module_6.exceptions import UserNotFoundException, PredictionException
 
-router = APIRouter(prefix='/predict')
+router = APIRouter(prefix="/predict")
 model = BasketModel()
 feature_store = FeatureStore()
 
@@ -18,11 +15,11 @@ feature_store = FeatureStore()
 class PredictRequest(BaseModel):  # Validate non-empty user_id
     user_id: str = Field(...)
 
-    @field_validator('user_id')
+    @field_validator("user_id")
     @classmethod
     def user_id_must_not_be_empty(cls, v):
         if not v or not v.strip():
-            raise ValueError('user_id must not be empty')
+            raise ValueError("user_id must not be empty")
         return v
 
 
@@ -50,4 +47,4 @@ async def predict(req: PredictRequest):
     except PredictionException:
         logging.error(f"Prediction failed for user {user_id}")
         raise HTTPException(status_code=500, detail="Prediction failed")
-    return {"predicted_price": float(prediction.mean())}
+    return {"predicted_price": float(prediction)}

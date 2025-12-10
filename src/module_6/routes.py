@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 
-from handlers.predict import router as predict_router
-from handlers.status import router as status_router
-from handlers.metrics import router as metrics_router
+from src.module_6.handlers.predict import router as predict_router
+from src.module_6.handlers.status import router as status_router
+from src.module_6.handlers.metrics import router as metrics_router
+
 
 def create_app() -> FastAPI:
     app = FastAPI()

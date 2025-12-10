@@ -1,6 +1,6 @@
 import uvicorn
 
-from routes import create_app
+from src.module_6.routes import create_app
 
 app = create_app()
 

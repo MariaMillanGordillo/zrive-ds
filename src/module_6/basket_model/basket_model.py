@@ -2,7 +2,7 @@ import os
 import joblib
 import numpy as np
 
-from exceptions import PredictionException
+from src.module_6.exceptions import PredictionException
 
 
 MODEL = os.path.abspath(
